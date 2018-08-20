@@ -21,9 +21,9 @@ convert_to_json = False
 
 
 
-pair ="EOSBTC"
+pair ="BTCUSDT"
 time = "15m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Aug_9.txt"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Aug_19.txt"
 
 
 

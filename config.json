@@ -1,22 +1,22 @@
 {
     "key_base":"D:/InderTheGreat/Documents/bcred.json",
            
-    "base":"ETH",
+    "base":"BTC",
     "asset":"USDT",
     
     "currency":"USD",
     "amount":1000,
     
-    "time":"5m",
+    "time":"15m",
     "strategy_base":"",
     "strategy":["Strategy_ZigZag_v12"],
 	
 	"is_file_load":true,
-	"file":"Historical/EOSBTC_15m_Binance_Numpy_Aug_9.txt.npy",
+	"file":"Historical/BTCUSDT_15m_Binance_Numpy_Aug_19.txt.npy",
 	
 	"view":	{
-				"start":800000,
-				"max":3000,
+				"start":1000000,
+				"max":2000,
 				"pad":0
 			}
         

@@ -92,7 +92,8 @@ class Strategy (TraderStrategy):
         ops["atr"] = hkdtl.EMA(hkdtl.ATR(14,strip=True),20)
         ops["wma"] = hkdtl.EMA(hkdtl.WMA(hkdtl.close,15,strip=True),20)
         
-        ops["renko"],ops["renkotype"] = hkdtl.RENKO(14*24*4,strip=True)
+        #ops["renko"],ops["renkotype"] = hkdtl.RENKO(14*24*4,strip=True)
+        ops["renko"],ops["renkotype"] = hkdtl.RENKO(14,strip=True)
         ops["renkoema"] = hkdtl.EMA(ops["renko"],34)
         ops["trendbarema"],ops["trendbarcolor"] = dtl.CM_Modified_Heik_Trend_Bars(34,"lime","red",strip=True)
         
@@ -100,7 +101,7 @@ class Strategy (TraderStrategy):
         
         ops["out1conv"] = convdtl.CM_Ultimate_MA_MTF_V2(convdtl.close,strip=True)
         #ops["trendbaremaconv"],ops["trendbarcolorconv"] = convdtl.CM_Modified_Heik_Trend_Bars(34*16,"lime","red",strip=True)
-        ops["trendbaremaconv"],ops["trendbarcolorconv"] = convdtl.CM_Modified_Heik_Trend_Bars(34*16,"lime","red",strip=True)
+        ops["trendbaremaconv"],ops["trendbarcolorconv"] = convdtl.CM_Modified_Heik_Trend_Bars(34*2,"lime","red",strip=True)
         
         #ops["volume"] = hkdtl.EMA(hkdtl.VOLUME(),34,strip=True)
         #ops["trades"] = hkdtl.EMA(hkdtl.TRADES(),34,strip=True)
@@ -124,6 +125,7 @@ class Strategy (TraderStrategy):
         ops["highhk"] = hkdtl.HIGH(strip=True)
         ops["lowhk"] = hkdtl.LOW(strip=True)
         ops["close"] = dtl.CLOSE(strip=True)
+        ops["open"] = dtl.OPEN(strip=True)
         ops["low"] = dtl.LOW(strip=True)
         ops["high"] = dtl.HIGH(strip=True)
         ops["dim"] = [dtl.start_index,dtl.max_view]    
@@ -217,9 +219,14 @@ class Strategy (TraderStrategy):
         else:
             return 'red',0   
         
-    def plot(self,ops,buy_index,sell_index):
+    def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+        
+        
         self.tp.temp_plt()
         
+        self.tp.plot_profit(ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
+        
+        '''
         self.tp.fig()
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","close")
@@ -232,17 +239,10 @@ class Strategy (TraderStrategy):
         
         self.tp.plot_check_previous(ops['close'],'white','white')
         self.tp.plot_check_previous(ops['renko'],'orange','orange')
-        '''
-        self.tp.plot_check_previous(ops['closehks'],'lime','lime')
-        self.tp.plot_check_previous(ops["triplesmamax"],'orange','orange')
-        self.tp.plot_check_previous(ops["kamaeam1"],'magenta','magenta')
-        '''
-        #self.tp.plot_check_previous(ops["rooted"],'lime','lime')
         
-        #self.tp.plot_check_previous(ops["opnhks"],'cyan','cyan')
-        #self.tp.plot_check_previous(ops["closehks"],'red','red')
+        
         self.tp.plot_check_previous(ops["highhks"],'magenta','magenta')
-        #self.tp.plot_check_previous(ops["lowhks"],'orange','orange')
+     
         self.tp.plot_check_previous(ops["rooted"],'lime','lime')
         
         
@@ -267,10 +267,9 @@ class Strategy (TraderStrategy):
                                [ ops['close'][pre[1]], ops['close'][cur[1]] ],
                                'pink')                
         
+        '''
         
         self.tp.show()
-    
-    
         self.tp.fig()
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","main_dtlclose")
@@ -288,6 +287,8 @@ class Strategy (TraderStrategy):
         self.tp.show()
         '''
         
+        '''
+        CLOSE HIGH LOW DIFFERENCESS WITH COLOR!!
         self.tp.fig()
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","main_dtlclose")
@@ -295,7 +296,7 @@ class Strategy (TraderStrategy):
         self.tp.plot_check_previous(ops["closeatrhigh"],'lime','lime')
         self.tp.plot_check_previous(ops['close'],'white','white')
         self.tp.show()
-        
+        '''
          
         
         '''

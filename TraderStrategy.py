@@ -33,7 +33,7 @@ class TraderStrategy(object):
         raise NotImplementedError("Method should be implemented in subclass.")  
         
     @abc.abstractmethod 
-    def plot(self,ops,buy_index,sell_index):
+    def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
         raise NotImplementedError("Method should be implemented in subclass.")  
     
     @abc.abstractmethod 
@@ -127,19 +127,20 @@ class TraderStrategy(object):
     def evaluate_strategy(self,ops):
         profit_normal = 0.0
         profit_low = 0.0
-        profit_medium = 0.0
+        #profit_medium = 0.0
         amount = (self.tc.asset_amount/self.ops['close'][0])
-        column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_MEDIUM','total_MEDIUM','risk_LOW','total_LOW')
+        #column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_MEDIUM','total_MEDIUM','risk_LOW','total_LOW')
+        column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_LOW','total_LOW')
         count = []
         risk_NORMAL = []
         risk_LOW = []
-        risk_MEDIUM = []
+        #risk_MEDIUM = []
         total_NORMAL = []
         total_LOW = []
-        total_MEDIUM = []
+        #total_MEDIUM = []
         currency_amount = self.tc.currency_amount
         
-        amount_normal = (self.tc.asset_amount/self.ops['close'][0])
+        #amount_normal = (self.tc.asset_amount/self.ops['close'][0])
         
         USD_CONVERT = self.tc.asset_price
         
@@ -150,18 +151,22 @@ class TraderStrategy(object):
             count.append(i)
             buy_index = self.buy_index[i]
             sell_index = self.sell_index[i]
-            add_index = 1
-            if(sell_index==len(self.ops['close'])-1):
-                add_index = 0
+            
+            #add_index = 1
+            #if(sell_index==len(self.ops['close'])-1):
+                #add_index = 0
                 
             buy_normal_price = self.ops['close'][buy_index]
             sell_normal_price = self.ops['close'][sell_index]
+  
+            #buy_medium_price = max(self.ops['close'][buy_index],self.ops['open'][buy_index+add_index]) #self.ops['close'][buy_index+add_index]
+            #sell_medium_price = min(self.ops['close'][sell_index],self.ops['open'][sell_index+add_index]) #self.ops['close'][sell_index+add_index]
             
-            buy_low_price = max(self.ops['high'][buy_index],self.ops['high'][buy_index+add_index])
-            sell_low_price = min(self.ops['low'][sell_index],self.ops['low'][sell_index+add_index])
+            buy_low_price = buy_normal_price+(max(abs(self.ops['high'][buy_index]-self.ops['close'][buy_index]),abs(self.ops['low'][buy_index]-self.ops['close'][buy_index]))*0.25)
+            sell_low_price = sell_normal_price-(max(abs(self.ops['low'][sell_index]-self.ops['close'][sell_index]),abs(self.ops['high'][sell_index]-self.ops['close'][sell_index]))*0.25)
             
-            buy_medium_price = self.ops['close'][buy_index+add_index]
-            sell_medium_price = self.ops['close'][sell_index+add_index]
+  
+            
             
             if('btcClose' in self.ops):
                 USD_CONVERT = self.ops["btcClose"][len(ops["btcClose"])-1]
@@ -169,7 +174,7 @@ class TraderStrategy(object):
                 amount = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
                 amount_normal = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
             
-            profit_normal_new = ((sell_normal_price-buy_normal_price)*amount_normal)*USD_CONVERT
+            profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
             currency_amount = currency_amount+profit_normal_new
             
             profit_normal = profit_normal+profit_normal_new
@@ -184,16 +189,16 @@ class TraderStrategy(object):
             risk_LOW.append('{:.2f}'.format(profit_low_new))
             total_LOW.append('{:.2f}'.format(profit_low))
             
-            profit_medium_new = ((sell_medium_price-buy_medium_price)*amount)*USD_CONVERT
-            profit_medium = profit_medium+profit_medium_new
-            risk_MEDIUM.append('{:.2f}'.format(profit_medium_new))
-            total_MEDIUM.append('{:.2f}'.format(profit_medium))
+            #profit_medium_new = ((sell_medium_price-buy_medium_price)*amount)*USD_CONVERT
+            #profit_medium = profit_medium+profit_medium_new
+            #risk_MEDIUM.append('{:.2f}'.format(profit_medium_new))
+            #total_MEDIUM.append('{:.2f}'.format(profit_medium))
             
-        table = Table([count,risk_NORMAL,total_NORMAL,risk_MEDIUM,total_MEDIUM,risk_LOW,total_LOW], names=column_names)    
+        #table = Table([count,risk_NORMAL,total_NORMAL,risk_MEDIUM,total_MEDIUM,risk_LOW,total_LOW], names=column_names)    
+        table = Table([count,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW], names=column_names)    
         Table.pprint(table)
-        
-            
-        self.plot(ops,self.buy_index,self.sell_index)   
+
+        self.plot(ops,self.buy_index,self.sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)   
         #print('P R O F I T')  
         #print(profit*self.tc.asset_price)
         pass

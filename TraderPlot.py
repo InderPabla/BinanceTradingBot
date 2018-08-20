@@ -261,6 +261,13 @@ class TraderPlot:
                 else:
                     self.v_line(sell_index[i],sell_color,"-")    
                     self.v_line(buy_index[i],buy_color,"-")
-                    
+    
+    def plot_profit(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+        #for i in range(0,len(risk_NORMAL)):
+        self.fig_cust(12,5)
+        self.plot(total_NORMAL,'red')
+        self.plot(total_LOW,'lime')
+        self.show()
+                
     def save(self,file):
         plt.savefig(file)

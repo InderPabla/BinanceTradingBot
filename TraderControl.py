@@ -41,7 +41,9 @@ class TraderControl:
         
         self.currency_amount = self.get_currency_amount()
         self.asset_price = self.get_asset_price()
+        
         self.asset_amount = self.currency_amount/self.asset_price
+        print("Asset Price in Dollars",self.asset_price,self.asset_amount)
         
         self.pair = self.get_pair()
         self.time = self.get_time_frame()
