@@ -12,11 +12,14 @@ warnings.filterwarnings(action='ignore', category=DeprecationWarning)
 
 class TraderDetail:
         
-    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16):
+    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16,second_kline=[]):
         self.className = "TraderDetail"
         self.math = TraderMath()
         self.kline = kline
 
+        if(len(second_kline)>0):
+            self.kline = self.merge(self.kline,second_kline)
+            
         self.close = self.getKey(self.kline,tb.CLOSE_INDEX)
         self.high = self.getKey(self.kline,tb.HIGH_INDEX)
         self.low = self.getKey(self.kline,tb.LOW_INDEX)
@@ -53,6 +56,17 @@ class TraderDetail:
         
         #BASIC Technical Details (Ex: MACD, etc)
     
+    def merge(self,kline1,kline2):
+        start_date = kline2[0][tb.TIME_INDEX]   
+        found_index =  -1
+        for i in range(len(kline1)-1,-1,-1):
+            if(kline1[i][tb.TIME_INDEX]==start_date):
+                found_index = i
+                break
+        print("Found Index",found_index)
+
+        return np.concatenate((kline1[0:found_index],kline2))
+        
     def close_based_on_time(self,dateOpen,dateClose):
         close = []
         j = 0

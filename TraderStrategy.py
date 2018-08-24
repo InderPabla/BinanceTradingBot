@@ -128,7 +128,11 @@ class TraderStrategy(object):
         profit_normal = 0.0
         profit_low = 0.0
         #profit_medium = 0.0
+        
+        
         amount = (self.tc.asset_amount/self.ops['close'][0])
+        print("Asset amount",self.tc.asset_amount," Current close",self.ops['close'][0])
+        
         #column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_MEDIUM','total_MEDIUM','risk_LOW','total_LOW')
         column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_LOW','total_LOW')
         count = []
@@ -144,10 +148,10 @@ class TraderStrategy(object):
         
         USD_CONVERT = self.tc.asset_price
         
+        print("USD CONV",USD_CONVERT," Amount",amount)
+        
         print(len(self.sell_index))
         for i in range(0,len(self.sell_index)):
-            
-            
             count.append(i)
             buy_index = self.buy_index[i]
             sell_index = self.sell_index[i]
@@ -167,12 +171,13 @@ class TraderStrategy(object):
             
   
             
-            
+            '''
             if('btcClose' in self.ops):
                 USD_CONVERT = self.ops["btcClose"][len(ops["btcClose"])-1]
             
                 amount = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
                 amount_normal = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
+            '''
             
             profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
             currency_amount = currency_amount+profit_normal_new

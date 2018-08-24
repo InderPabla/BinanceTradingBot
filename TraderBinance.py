@@ -56,11 +56,17 @@ class TraderBinance:
         ticks = self.client.get_historical_klines(pair,self.TIME_OPTION[time],start_date)
         #print (len(ticks))
         return np.array(self.array_string_to_float(ticks))
-        
+     
+    def current_ticker(self,pair=""):
+        self.client.get_ticker()
     def get_candles(self,time="",pair=""):
         time_frame = self.binance_time(time)
         ticks = self.client.get_klines(symbol=pair, interval=time_frame)
         return np.array(self.array_string_to_float(ticks))
+    
+    def get_current_server_time(self):
+        server_time = self.client.get_server_time()
+        return server_time["serverTime"]
     
     def binance_time(self,time):
         return self.TIME_OPTION[time]
@@ -71,7 +77,7 @@ class TraderBinance:
                 if(type(array[i][j])==str):
                     array[i][j] =  float(array[i][j]);
         return array
-
+    
     def candles_to_dict(self,candles):
         candles_dict = []
         for i in range(0,len(candles)):

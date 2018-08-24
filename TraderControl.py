@@ -7,6 +7,8 @@ import pandas as pd
 import json as json
 import numpy as np
 import requests as req
+from threading import Timer
+from datetime import datetime
 
 class TraderControl:
     KEY_KEY = 'key'
@@ -26,6 +28,7 @@ class TraderControl:
     KEY_MAX = 'max'
     KEY_START = 'start'
     KEY_PAD = 'pad'
+    KEY_APPEND = 'is_append'
     
     def __init__(self,config,filePath):
         
@@ -43,7 +46,7 @@ class TraderControl:
         self.asset_price = self.get_asset_price()
         
         self.asset_amount = self.currency_amount/self.asset_price
-        print("Asset Price in Dollars",self.asset_price,self.asset_amount)
+        print("Asset Price in Dollars",self.asset_price,self.asset_amount,self.currency_amount)
         
         self.pair = self.get_pair()
         self.time = self.get_time_frame()
@@ -55,15 +58,18 @@ class TraderControl:
         self.initilize_strategies()
         
         self.isFileLoad = self.config_data[self.KEY_FILE_LOAD]
+        self.isAppend = self.config_data[self.KEY_APPEND]
         self.file = self.config_data[self.KEY_FILE]
         
         self.kline = []
+        self.real_kline  = []
+        
         self.start_view = self.config_data[self.KEY_VIEW][self.KEY_START]
         self.max_view = self.config_data[self.KEY_VIEW][self.KEY_MAX]
         self.pad_view = self.config_data[self.KEY_VIEW][self.KEY_PAD]
         
         self.get_kline_candles()
-        
+        self.server_time = 0;
         '''
         if(not self.config==None):
        
@@ -79,7 +85,15 @@ class TraderControl:
                                           0,0,0,0])
             self.loaded_kline = np.array(self.loaded_kline)
         '''
+    def get_recent_candle(self,use_config=True,pair=""):
+        if use_config == True:
+            pair = self.pair
+            return self.tb.current_ticker(pair)
+        else:
+            return self.tb.current_ticker(pair)
+                
     def initilize_strategies(self):
+        self.strategies = []
         import_strategies = self.get_strategies()
         for i in range(0,len(import_strategies)):
             import_string = self.config_data[self.KEY_STRA_BASE]+import_strategies[i]+'.Strategy'
@@ -89,9 +103,31 @@ class TraderControl:
             self.strategies.append(strategy_object)
             
     def run_strategies(self):
-        for i in range(0,len(self.strategies)):
-            self.strategies[0].run_strategy()
+        if(self.isAppend == True or self.isFileLoad==False):
+            self.server_time = self.tb.get_current_server_time()
             
+            print(datetime.fromtimestamp(self.server_time/1000).isoformat(' '))
+            ops,buy_index,sell_index = self.strategies[0].run_strategy()
+            
+            
+            if(len(buy_index)>0):
+                if(len(sell_index)==len(buy_index)):
+                    print("SELL ORDER")
+                else:
+                    print("BUY ORDER")    
+            else:
+                print("NO BUY AND SELL ORDERS")
+            
+            '''
+            if(len(buy_index)>0 and len(sell_index)>0):
+                print()
+            '''   
+          
+        else:
+            '''
+            for i in range(0,len(self.strategies)):
+                self.strategies[0].run_strategy()
+            '''
     
     def historical(self,time,pair,start_date):
         return self.tb.historial(time,pair,start_date)
@@ -111,6 +147,14 @@ class TraderControl:
         else:
             self.kline = np.load(self.file)
  
+        if(self.isAppend==True):
+            if use_config == True:
+                pair = self.pair
+                time = self.time
+                self.real_kline = self.tb.get_candles(pair=self.pair,time=self.time)
+            else:
+                self.real_kline = self.tb.get_candles(pair=pair,time=time)
+                
         return self.kline
         
     def get_secret_key(self):

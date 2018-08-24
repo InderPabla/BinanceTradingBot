@@ -1,7 +1,7 @@
 {
     "key_base":"D:/InderTheGreat/Documents/bcred.json",
            
-    "base":"BTC",
+    "base":"ONT",
     "asset":"USDT",
     
     "currency":"USD",
@@ -11,13 +11,13 @@
     "strategy_base":"",
     "strategy":["Strategy_ZigZag_v12"],
 	
-	"is_file_load":true,
-	"file":"Historical/BTCUSDT_15m_Binance_Numpy_Aug_19.txt.npy",
-	
+	"is_file_load":false,
+	"file":"Historical/ONTUSDT_15m_Binance_Numpy_Aug_19.txt.npy",
+	"is_append":false,
 	"view":	{
-				"start":1000000,
+				"start":0,
 				"max":2000,
-				"pad":0
+				"pad":10
 			}
         
 }

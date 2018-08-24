@@ -31,20 +31,18 @@ class Strategy (TraderStrategy):
         
         hk_count = 1
 
-        
-        
         dtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
                            max_view_amount=self.tc.max_view,
-                           pad_view=self.tc.pad_view)
+                           pad_view=self.tc.pad_view,second_kline = self.tc.real_kline)
         
         convdtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
                            max_view_amount=self.tc.max_view,
-                           pad_view=self.tc.pad_view,convert=True,)
+                           pad_view=self.tc.pad_view,convert=True,second_kline = self.tc.real_kline)
         
         hkdtl = dtl
-
+        
         #btcdtl = TraderDetail(self.trueBTCPriceKline)
         
         
@@ -63,6 +61,11 @@ class Strategy (TraderStrategy):
         ops["main_close"] = hkdtl.CLOSE(strip=True)
         ops["openTime"] = dtl.OPENTIME(strip=True)
         ops["closeTime"] = dtl.CLOSETIME(strip=True)
+        
+        latest_open_time = datetime.fromtimestamp(ops["openTime"][len(ops["openTime"])-1]/1000)
+        latest_close_time = datetime.fromtimestamp(ops["closeTime"][len(ops["closeTime"])-1]/1000)
+        print("Opentime:",latest_open_time.isoformat(' '),"Closetime:",latest_close_time)
+       
         
         #ops["btcClose"] = btcdtl.close_based_on_time(ops["openTime"],ops["closeTime"])
 
@@ -117,9 +120,7 @@ class Strategy (TraderStrategy):
         
         ops["main_dtlclose"] = dtl.CLOSE(strip=True)
         ops["main_hkclose"] = hkdtl.CLOSE(strip=True)
-        
-        
-        
+
         ops["closehk"] = hkdtl.CLOSE(strip=True)
         ops["openhk"] = hkdtl.OPEN(strip=True)
         ops["highhk"] = hkdtl.HIGH(strip=True)
@@ -148,6 +149,8 @@ class Strategy (TraderStrategy):
         ops = dtl.normalize_view(ops)
         
         self.define_strategy(ops) #define a custom staratgy using ops
+        
+        return self.ops,self.buy_index,self.sell_index
     
     '''
     ###########################################################################
@@ -220,10 +223,7 @@ class Strategy (TraderStrategy):
             return 'red',0   
         
     def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
-        
-        
         self.tp.temp_plt()
-        
         self.tp.plot_profit(ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
         
         '''
@@ -274,9 +274,10 @@ class Strategy (TraderStrategy):
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","main_dtlclose")
         self.tp.custom_plot_color_decision(ops['close'],ops,self.pm3)
-        self.tp.plot_check_previous(ops['closeconv'],'white','white')
+        self.tp.plot_check_previous(ops['closeconv'],'yellow','yellow')
         self.tp.plot_check_previous(ops['out1conv'],'lime','red')
         self.tp.plot_check_previous(ops['trendbaremaconv'],'lime','red')
+        self.tp.save("breakthroughlevel99.png")
         self.tp.show()
         
         '''
