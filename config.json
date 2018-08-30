@@ -7,17 +7,19 @@
     "currency":"USD",
     "amount":1000,
     
-    "time":"15m",
+    "time":"5m",
     "strategy_base":"",
     "strategy":["Strategy_ZigZag_v12"],
 	
-	"is_file_load":false,
-	"file":"Historical/ONTUSDT_15m_Binance_Numpy_Aug_19.txt.npy",
-	"is_append":false,
+	"is_file_load":true,
+	"file":"Historical/ONTUSDT_5m_Binance_Numpy_Aug_29.txt.npy",
+	"is_append":true,
 	"view":	{
-				"start":0,
+				"start":100000000,
 				"max":2000,
-				"pad":10
+				"pad":0,
+				"strip":0,
+				"plot":"false"
 			}
         
 }

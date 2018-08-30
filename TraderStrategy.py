@@ -116,7 +116,8 @@ class TraderStrategy(object):
             
             self.evaluate_strategy(ops)
         else:
-            self.plot(ops,[],[])
+            if(self.tc.isPlot==True):
+                self.plot(ops,[],[])
         
     def append_buy(self,index):
         self.buy_index.append(index)
@@ -202,8 +203,9 @@ class TraderStrategy(object):
         #table = Table([count,risk_NORMAL,total_NORMAL,risk_MEDIUM,total_MEDIUM,risk_LOW,total_LOW], names=column_names)    
         table = Table([count,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW], names=column_names)    
         Table.pprint(table)
-
-        self.plot(ops,self.buy_index,self.sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)   
+        
+        if(self.tc.isPlot==True):
+            self.plot(ops,self.buy_index,self.sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)   
         #print('P R O F I T')  
         #print(profit*self.tc.asset_price)
         pass

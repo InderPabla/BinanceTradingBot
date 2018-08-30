@@ -12,11 +12,11 @@ warnings.filterwarnings(action='ignore', category=DeprecationWarning)
 
 class TraderDetail:
         
-    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16,second_kline=[]):
+    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16,second_kline=[],len_print=False):
         self.className = "TraderDetail"
         self.math = TraderMath()
         self.kline = kline
-
+        self.len_print = len_print
         if(len(second_kline)>0):
             self.kline = self.merge(self.kline,second_kline)
             
@@ -41,7 +41,8 @@ class TraderDetail:
             self.pad_view = pad_view
             self.max_view = max_view_amount
             
-            print("Kline Len",len(self.kline))
+            if(len_print==True):
+                print("Kline Len",len(self.kline))
             
             if(self.start_index>=len(self.kline)):
                 self.start_index = len(self.kline)-self.max_view
@@ -63,20 +64,23 @@ class TraderDetail:
             if(kline1[i][tb.TIME_INDEX]==start_date):
                 found_index = i
                 break
-        print("Found Index",found_index)
+        if(self.len_print==True):
+            print("Found Index:",found_index,", Leftover:",((len(kline1)-1)-found_index))
 
         return np.concatenate((kline1[0:found_index],kline2))
         
     def close_based_on_time(self,dateOpen,dateClose):
         close = []
         j = 0
-        print (len(self.openTime),self.openTime[0])
+        if(self.len_print==True):    
+            print (len(self.openTime),self.openTime[0])
 
         for i in range(0,len(self.openTime)):
             if(dateOpen[0]<=self.openTime[i]):
                 j = i
                 break
-        print ('start',j)
+        if(self.len_print==True):    
+            print ('start',j)
         
         for i in range(0,len(dateOpen)):
             currOpen = dateOpen[i]/1000

@@ -22,14 +22,14 @@ convert_to_json = False
 
 
 pair ="ONTUSDT"
-time = "15m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Aug_19.txt"
+time = "5m"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Aug_29.txt"
 
 
 
 if(convert_to_json==False):
     tc = TraderControl(config,None)
-    ticksICX = tc.historical(time,pair,"2015-02-24T13:00:00-08:00")
+    ticksICX = tc.historical(time,pair,"2018-02-10") #2015-02-24T13:00:00-00:00
     
     
     

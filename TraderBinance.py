@@ -59,6 +59,7 @@ class TraderBinance:
      
     def current_ticker(self,pair=""):
         self.client.get_ticker()
+        
     def get_candles(self,time="",pair=""):
         time_frame = self.binance_time(time)
         ticks = self.client.get_klines(symbol=pair, interval=time_frame)
@@ -66,6 +67,7 @@ class TraderBinance:
     
     def get_current_server_time(self):
         server_time = self.client.get_server_time()
+        #print(self.client.get_exchange_info())
         return server_time["serverTime"]
     
     def binance_time(self,time):

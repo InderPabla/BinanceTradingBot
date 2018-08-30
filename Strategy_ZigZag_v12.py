@@ -18,7 +18,7 @@ class Strategy (TraderStrategy):
         self.run = True
         self.visual_sell = False
         self.visual_buy = False
-        
+ 
         #self.trueBTCPriceKline = self.tc.loadFromFile('Historical/BTCUSDT_1h_Binance_Numpy_Aug_7.txt.npy')
         
     '''
@@ -34,7 +34,7 @@ class Strategy (TraderStrategy):
         dtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
                            max_view_amount=self.tc.max_view,
-                           pad_view=self.tc.pad_view,second_kline = self.tc.real_kline)
+                           pad_view=self.tc.pad_view,second_kline = self.tc.real_kline,len_print=True)
         
         convdtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
@@ -61,12 +61,7 @@ class Strategy (TraderStrategy):
         ops["main_close"] = hkdtl.CLOSE(strip=True)
         ops["openTime"] = dtl.OPENTIME(strip=True)
         ops["closeTime"] = dtl.CLOSETIME(strip=True)
-        
-        latest_open_time = datetime.fromtimestamp(ops["openTime"][len(ops["openTime"])-1]/1000)
-        latest_close_time = datetime.fromtimestamp(ops["closeTime"][len(ops["closeTime"])-1]/1000)
-        print("Opentime:",latest_open_time.isoformat(' '),"Closetime:",latest_close_time)
-       
-        
+
         #ops["btcClose"] = btcdtl.close_based_on_time(ops["openTime"],ops["closeTime"])
 
         '''
@@ -225,6 +220,7 @@ class Strategy (TraderStrategy):
     def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
         self.tp.temp_plt()
         self.tp.plot_profit(ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
+        self.tp.show()
         
         '''
         self.tp.fig()
@@ -269,8 +265,8 @@ class Strategy (TraderStrategy):
         
         '''
         
-        self.tp.show()
-        self.tp.fig()
+        
+        self.tp.fig_cust(20,6)
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","main_dtlclose")
         self.tp.custom_plot_color_decision(ops['close'],ops,self.pm3)
