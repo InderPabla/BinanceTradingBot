@@ -15,6 +15,8 @@ from colorama import Fore, Style, Back, init
 
 def pin(foreColor):
         return foreColor+Style.BRIGHT
+
+
     
 class TraderControl:
     KEY_KEY = 'key'

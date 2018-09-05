@@ -2,7 +2,14 @@ from TraderControl import TraderControl as TraderControl
 import abc
 from astropy.table import Table
 import numpy as np
+from colorama import Fore, Style, Back, init
 
+def pin(foreColor):
+        return foreColor+Style.BRIGHT
+    
+def rst():
+        return Fore.WHITE+Style.BRIGHT
+    
 class TraderStrategy(object):
     
     def __init__(self, tc:TraderControl):
@@ -148,6 +155,8 @@ class TraderStrategy(object):
                 
                 "amount":[],
                 
+                "colors":[]
+                
         }
 
         USD_CONVERT = self.tc.asset_price
@@ -155,6 +164,8 @@ class TraderStrategy(object):
         print("USD CONV",USD_CONVERT," Amount",amount)
         
         print("NUMBER OF SELLS",len(self.sell_index))
+        
+        evaled["colors"].append(Fore.WHITE)
         for i in range(0,len(self.buy_index)):
             sell_index = -1
             if(i<len(self.sell_index)):
@@ -195,6 +206,11 @@ class TraderStrategy(object):
                 evaled["selLow"].append(str(sell_low_price))
                 evaled["sellNormal"].append(str(sell_normal_price))
                 
+                if(profit_low<=0): 
+                    evaled["colors"].append(Fore.RED) 
+                else: 
+                    evaled["colors"].append(Fore.GREEN)
+                
             else:
                 evaled["sellIndex"].append(-1)    
                 evaled["count"].append(i+1)
@@ -207,6 +223,8 @@ class TraderStrategy(object):
                 evaled["buyNormal"].append(str(buy_normal_price))
                 evaled["selLow"].append('??')
                 evaled["sellNormal"].append('??')
+                
+                evaled["colors"].append(Fore.CYAN) 
              
             if(amount>0.5):
                 evaled["amount"].append('{:.2f}'.format(amount))
@@ -217,10 +235,10 @@ class TraderStrategy(object):
         tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
         tableVals2 = np.array(tableVals).T.tolist()
         #tableVals2 = tableVals2.reshape([tableVals2.shape[1],tableVals2.shape[2]])
-        print(tableVals2)
+    
         #tableVals2.transpose()
         #print(tableVals2)
-        self.print_table(tableVals2, header=column_names, wrap=False, max_col_width=15, wrap_style='wrap',row_line=False, fix_col_width=True)
+        self.print_table(tableVals2, evaled["colors"],header=column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=True)
         
         #table = Table(tableVals, names=column_names)   
         #Table.pprint(table)
@@ -231,7 +249,7 @@ class TraderStrategy(object):
 
         return evaled
     
-    def print_table(self,items, header=None, wrap=True, max_col_width=20, wrap_style="wrap", row_line=False, fix_col_width=False):
+    def print_table(self,items, colors, header=None, wrap=True, max_col_width=20, wrap_style="wrap", row_line=False, fix_col_width=False):
         ''' Prints a matrix of data as a human readable table. Matrix
         should be a list of lists containing any type of values that can
         be converted into text strings.
@@ -246,7 +264,7 @@ class TraderStrategy(object):
         https://gist.github.com/jhcepas/5884168
         
         '''
-            
+        color_index  = 0
         if fix_col_width:
             c2maxw = dict([(i, max_col_width) for i in range(0,len(items[0]))])
             wrap = True
@@ -267,6 +285,8 @@ class TraderStrategy(object):
             current_item = 0
             row = items[current_item]
         while row:
+            color = colors[color_index]
+            color_index = color_index+1
             is_extra = False
             values = []
             extra_line = [""]*len(row)
@@ -289,7 +309,8 @@ class TraderStrategy(object):
                         val = val[:wrap_width]
                 val = val.ljust(cwidth)
                 values.append(val)
-            print (' | '.join(values))
+            
+            print (pin(color)+' | '.join(values)+rst())
             if not set(extra_line) - set(['']):
                 if header and current_item == -1:
                     print (' | '.join(['='*c2maxw[col] for col in range(0,len(row)) ]))

@@ -21,15 +21,15 @@ convert_to_json = False
 
 
 
-pair ="ADABTC"
-time = "15m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_03.txt"
+pair ="ONTUSDT"
+time = "5m"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_05.txt"
 
 
 
 if(convert_to_json==False):
     tc = TraderControl(config,None)
-    ticksICX = tc.historical(time,pair,"2018-02-10") #2015-02-24T13:00:00-00:00
+    ticksICX = tc.historical(time,pair,"2018-03-10") #2015-02-24T13:00:00-00:00
     
     
     
