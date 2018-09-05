@@ -265,11 +265,15 @@ class TraderPlot:
         if(len(buy_index)>len(sell_index)):
             self.v_line(buy_index[len(buy_index)-1],"cyan","-")    
     
-    def plot_profit(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+    def plot_profit(self,ops,buy_index,sell_index,evaled):
         #for i in range(0,len(risk_NORMAL)):
         self.fig_cust(12,5)
-        self.plot(total_NORMAL,'red')
-        self.plot(total_LOW,'lime')
+        if(len(buy_index)==len(sell_index)):
+            self.plot(evaled["normalTotal"],'red')
+            self.plot(evaled["lowTotal"],'lime')
+        else:
+            self.plot(evaled["normalTotal"][0:len(evaled["normalTotal"])-1],'red')
+            self.plot(evaled["lowTotal"][0:len(evaled["normalTotal"])-1],'lime')
         self.show()
                 
     def save(self,file):

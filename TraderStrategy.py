@@ -1,6 +1,7 @@
 from TraderControl import TraderControl as TraderControl
 import abc
 from astropy.table import Table
+import numpy as np
 
 class TraderStrategy(object):
     
@@ -33,7 +34,7 @@ class TraderStrategy(object):
         raise NotImplementedError("Method should be implemented in subclass.")  
         
     @abc.abstractmethod 
-    def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+    def plot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
         raise NotImplementedError("Method should be implemented in subclass.")  
     
     @abc.abstractmethod 
@@ -55,11 +56,7 @@ class TraderStrategy(object):
             size = len(ops['close'])
             buy_state = True
             skip_sell = False
-            
-            amount_normal = (self.tc.asset_amount/self.ops['close'][0])
-            USD_CONVERT = self.tc.asset_price
-            
-            
+
             for index in range(1,size):
                 
                 # BUY STATE #################################################
@@ -114,10 +111,12 @@ class TraderStrategy(object):
                         
                     
             
-            self.evaluate_strategy(ops)
+            return self.evaluate_strategy(ops)
         else:
             if(self.tc.isPlot==True):
                 self.plot(ops,[],[])
+                
+            return {}
         
     def append_buy(self,index):
         self.buy_index.append(index)
@@ -128,88 +127,187 @@ class TraderStrategy(object):
     def evaluate_strategy(self,ops):
         profit_normal = 0.0
         profit_low = 0.0
-        #profit_medium = 0.0
-        
-        
-        amount = (self.tc.asset_amount/self.ops['close'][0])
+
+        amount = 0 #(self.tc.asset_amount/self.ops['close'][len(self.ops['close'])-1])
         print("Asset amount",self.tc.asset_amount," Current close",self.ops['close'][0])
-        
-        #column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_MEDIUM','total_MEDIUM','risk_LOW','total_LOW')
-        column_names = ('count', 'risk_NORMAL','total_NORMAL','risk_LOW','total_LOW')
-        count = []
-        risk_NORMAL = []
-        risk_LOW = []
-        #risk_MEDIUM = []
-        total_NORMAL = []
-        total_LOW = []
-        #total_MEDIUM = []
-        currency_amount = self.tc.currency_amount
-        
-        #amount_normal = (self.tc.asset_amount/self.ops['close'][0])
-        
+
+        column_names = ('TRADE #','SELL INDEX', 'BUY', 'SELL', 'AMOUNT', 'NORM','TTL NORM','LOW','TLL LOW')
+
+        evaled = {
+                "low":[],
+                "lowTotal":[],
+                "normal":[],
+                "normalTotal":[],
+                "sellIndex":[],
+                "count":[],
+                
+                "buyLow":[],
+                "buyNormal":[],
+                "selLow":[],
+                "sellNormal":[],
+                
+                "amount":[],
+                
+        }
+
         USD_CONVERT = self.tc.asset_price
         
         print("USD CONV",USD_CONVERT," Amount",amount)
         
-        print(len(self.sell_index))
-        for i in range(0,len(self.sell_index)):
-            count.append(i)
+        print("NUMBER OF SELLS",len(self.sell_index))
+        for i in range(0,len(self.buy_index)):
+            sell_index = -1
+            if(i<len(self.sell_index)):
+                sell_index = self.sell_index[i]
+            
             buy_index = self.buy_index[i]
-            sell_index = self.sell_index[i]
-            
-            #add_index = 1
-            #if(sell_index==len(self.ops['close'])-1):
-                #add_index = 0
-                
             buy_normal_price = self.ops['close'][buy_index]
-            sell_normal_price = self.ops['close'][sell_index]
-  
-            #buy_medium_price = max(self.ops['close'][buy_index],self.ops['open'][buy_index+add_index]) #self.ops['close'][buy_index+add_index]
-            #sell_medium_price = min(self.ops['close'][sell_index],self.ops['open'][sell_index+add_index]) #self.ops['close'][sell_index+add_index]
-            
             buy_low_price = buy_normal_price+(max(abs(self.ops['high'][buy_index]-self.ops['close'][buy_index]),abs(self.ops['low'][buy_index]-self.ops['close'][buy_index]))*0.25)
-            sell_low_price = sell_normal_price-(max(abs(self.ops['low'][sell_index]-self.ops['close'][sell_index]),abs(self.ops['high'][sell_index]-self.ops['close'][sell_index]))*0.25)
+            if(sell_index>-1 and sell_index<(len(ops["close"])-1)):
+                    buy_low_price2 = buy_normal_price+(max(abs(self.ops['high'][buy_index+1]-self.ops['close'][buy_index+1]),abs(self.ops['low'][buy_index+1]-self.ops['close'][buy_index+1]))*0.25)
+                    if(buy_low_price2>buy_low_price):
+                        buy_low_price = buy_low_price2          
+            amount = (self.tc.asset_amount/self.ops['close'][buy_index])
             
-  
-            
-            '''
-            if('btcClose' in self.ops):
-                USD_CONVERT = self.ops["btcClose"][len(ops["btcClose"])-1]
-            
-                amount = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
-                amount_normal = (currency_amount/self.ops["btcClose"][len(ops["btcClose"])-1])/self.ops["close"][buy_index]
-            '''
-            
-            profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
-            currency_amount = currency_amount+profit_normal_new
-            
-            profit_normal = profit_normal+profit_normal_new
-            risk_NORMAL.append('{:.2f}'.format(profit_normal_new))
-            total_NORMAL.append('{:.2f}'.format(profit_normal))
-            #b = amount_normal
-            # = amount+((profit_normal/USD_CONVERT)/(self.ops['close'][sell_index]))
-            #print(b,amount_normal,profit_normal)
-            
-            profit_low_new = ((sell_low_price-buy_low_price)*amount)*USD_CONVERT
-            profit_low = profit_low+profit_low_new
-            risk_LOW.append('{:.2f}'.format(profit_low_new))
-            total_LOW.append('{:.2f}'.format(profit_low))
-            
-            #profit_medium_new = ((sell_medium_price-buy_medium_price)*amount)*USD_CONVERT
-            #profit_medium = profit_medium+profit_medium_new
-            #risk_MEDIUM.append('{:.2f}'.format(profit_medium_new))
-            #total_MEDIUM.append('{:.2f}'.format(profit_medium))
-            
-        #table = Table([count,risk_NORMAL,total_NORMAL,risk_MEDIUM,total_MEDIUM,risk_LOW,total_LOW], names=column_names)    
-        table = Table([count,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW], names=column_names)    
-        Table.pprint(table)
+            if(sell_index>-1):
+                evaled["sellIndex"].append(self.sell_index[i])
+                evaled["count"].append(i+1)
+
+                sell_normal_price = self.ops['close'][sell_index]
+                sell_low_price = sell_normal_price-(max(abs(self.ops['low'][sell_index]-self.ops['close'][sell_index]),abs(self.ops['high'][sell_index]-self.ops['close'][sell_index]))*0.25)
+                if(sell_index<(len(ops["close"])-1)):
+                    sell_low_price2 = sell_normal_price-(max(abs(self.ops['low'][sell_index+1]-self.ops['close'][sell_index+1]),abs(self.ops['high'][sell_index+1]-self.ops['close'][sell_index+1]))*0.25)    
+                    if(sell_low_price2<sell_low_price):
+                        sell_low_price = sell_low_price2  
+
+                profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
+                profit_normal = profit_normal+profit_normal_new
+                evaled["normal"].append('{:.2f}'.format(profit_normal_new))
+                evaled["normalTotal"].append('{:.2f}'.format(profit_normal))
+       
+                profit_low_new = ((sell_low_price-buy_low_price)*amount)*USD_CONVERT
+                profit_low = profit_low+profit_low_new
+                evaled["low"].append('{:.2f}'.format(profit_low_new))
+                evaled["lowTotal"].append('{:.2f}'.format(profit_low))
+                
+                evaled["buyLow"].append(str(buy_low_price))
+                evaled["buyNormal"].append(str(buy_normal_price))
+                evaled["selLow"].append(str(sell_low_price))
+                evaled["sellNormal"].append(str(sell_normal_price))
+                
+            else:
+                evaled["sellIndex"].append(-1)    
+                evaled["count"].append(i+1)
+                evaled["normal"].append('??')
+                evaled["normalTotal"].append('??')
+                evaled["low"].append('??')
+                evaled["lowTotal"].append('??')
+                
+                evaled["buyLow"].append(str(buy_low_price))
+                evaled["buyNormal"].append(str(buy_normal_price))
+                evaled["selLow"].append('??')
+                evaled["sellNormal"].append('??')
+             
+            if(amount>0.5):
+                evaled["amount"].append('{:.2f}'.format(amount))
+            else:
+                evaled["amount"].append(str(amount))
+                
+        #table = Table([count,sell_indexs,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW], names=column_names)    
+        tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
+        tableVals2 = np.array(tableVals).T.tolist()
+        #tableVals2 = tableVals2.reshape([tableVals2.shape[1],tableVals2.shape[2]])
+        print(tableVals2)
+        #tableVals2.transpose()
+        #print(tableVals2)
+        self.print_table(tableVals2, header=column_names, wrap=False, max_col_width=15, wrap_style='wrap',row_line=False, fix_col_width=True)
+        
+        #table = Table(tableVals, names=column_names)   
+        #Table.pprint(table)
+        #Table.pprint(table,max_lines=2)
         
         if(self.tc.isPlot==True):
-            self.plot(ops,self.buy_index,self.sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)   
-        #print('P R O F I T')  
-        #print(profit*self.tc.asset_price)
-        pass
+            self.plot(ops,self.buy_index,self.sell_index,evaled)
+
+        return evaled
     
+    def print_table(self,items, header=None, wrap=True, max_col_width=20, wrap_style="wrap", row_line=False, fix_col_width=False):
+        ''' Prints a matrix of data as a human readable table. Matrix
+        should be a list of lists containing any type of values that can
+        be converted into text strings.
+        Two different column adjustment methods are supported through
+        the *wrap_style* argument:
+        
+           wrap: it will wrap values to fit max_col_width (by extending cell height)
+           cut: it will strip values to max_col_width
+        If the *wrap* argument is set to False, column widths are set to fit all
+        values in each column.
+        This code is free software. Updates can be found at
+        https://gist.github.com/jhcepas/5884168
+        
+        '''
+            
+        if fix_col_width:
+            c2maxw = dict([(i, max_col_width) for i in range(0,len(items[0]))])
+            wrap = True
+        elif not wrap:
+            c2maxw = dict([(i, max([len(str(e[i])) for e in items])) for i in range(0,len(items[0]))])
+        else:
+            c2maxw = dict([(i, min(max_col_width, max([len(str(e[i])) for e in items])))
+                            for i in range(0,len(items[0]))])
+        if header:
+            current_item = -1
+            row = header
+            if wrap and not fix_col_width:
+                for col, maxw in c2maxw.iteritems():
+                    c2maxw[col] = max(maxw, len(header[col]))
+                    if wrap:
+                        c2maxw[col] = min(c2maxw[col], max_col_width)
+        else:
+            current_item = 0
+            row = items[current_item]
+        while row:
+            is_extra = False
+            values = []
+            extra_line = [""]*len(row)
+            for col, val in enumerate(row):
+                cwidth = c2maxw[col]
+                wrap_width = cwidth
+                val = str(val)
+                try:
+                    newline_i = val.index("\n")
+                except ValueError:
+                    pass
+                else:
+                    wrap_width = min(newline_i+1, wrap_width)
+                    val = val.replace("\n", " ", 1)
+                if wrap and len(val) > wrap_width:
+                    if wrap_style == "cut":
+                        val = val[:wrap_width-1]+"+"
+                    elif wrap_style == "wrap":
+                        extra_line[col] = val[wrap_width:]
+                        val = val[:wrap_width]
+                val = val.ljust(cwidth)
+                values.append(val)
+            print (' | '.join(values))
+            if not set(extra_line) - set(['']):
+                if header and current_item == -1:
+                    print (' | '.join(['='*c2maxw[col] for col in range(0,len(row)) ]))
+                current_item += 1
+                try:
+                    row = items[current_item]
+                except IndexError:
+                    row = None
+            else:
+                row = extra_line
+                is_extra = True
+     
+            if row_line and not is_extra and not (header and current_item == 0):
+                if row:
+                    print (' | '.join(['-'*c2maxw[col] for col in range(0,len(row)) ]))
+                else:
+                    print (' | '.join(['='*c2maxw[col] for col in range(0,len(extra_line)) ]))
+                
     def print_operation_keys(self,ops):
         ops_keys = ""
         first = True

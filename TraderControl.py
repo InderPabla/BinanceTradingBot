@@ -11,7 +11,11 @@ from threading import Timer
 from datetime import datetime
 import threading
 import time
+from colorama import Fore, Style, Back, init
 
+def pin(foreColor):
+        return foreColor+Style.BRIGHT
+    
 class TraderControl:
     KEY_KEY = 'key'
     KEY_KEY_BASE = 'key_base'
@@ -167,13 +171,13 @@ class TraderControl:
             
             
             
-          
+    
                        
     def run_strategies(self):
         self.api_call_count = self.api_call_count +1
         if(self.api_call_count>self.max_api_call_count):
             return
-        print("===================OPENING=====================")
+        print(pin(Fore.WHITE)+"===================OPENING=====================")
         self.initilize_strategies()
         self.get_kline_candles()
         
@@ -188,15 +192,13 @@ class TraderControl:
             if(difference_time<0):
                 print("DIFF LESS THAN 0",difference_time)
                 time.sleep(1)
-                print("===================CLOSING=====================")
+                print(pin(Fore.WHITE)+"===================CLOSING=====================")
                 self.run_strategies()
                 return
             
             
-            ops,buy_index,sell_index = self.strategies[0].run_strategy()
-            
-            
-            
+            ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy()
+ 
             
             print("========================================")
             #print(self.real_kline[len(self.real_kline)-1])
@@ -229,9 +231,9 @@ class TraderControl:
             '''   
             
             
-            print("===================CLOSING=====================")    
+            print(pin(Fore.WHITE)+"===================CLOSING=====================")    
             print("=================SLEEP START===================")
-            self.timed_sleeper(difference_time,1,30,latest_close_time)
+            self.timed_sleeper(difference_time,1,60,latest_close_time)
             #threading.Timer(difference_time, self.run_strategies).start()
             
         else:

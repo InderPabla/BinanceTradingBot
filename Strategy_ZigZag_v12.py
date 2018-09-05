@@ -143,9 +143,9 @@ class Strategy (TraderStrategy):
         
         ops = dtl.normalize_view(ops)
         
-        self.define_strategy(ops) #define a custom staratgy using ops
+        evaled = self.define_strategy(ops) #define a custom staratgy using ops
         
-        return self.ops,self.buy_index,self.sell_index
+        return self.ops,self.buy_index,self.sell_index, evaled
     
     '''
     ###########################################################################
@@ -217,9 +217,9 @@ class Strategy (TraderStrategy):
         else:
             return 'red',0   
         
-    def plot(self,ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+    def plot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
         self.tp.temp_plt()
-        self.tp.plot_profit(ops,buy_index,sell_index,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
+        self.tp.plot_profit(ops,buy_index,sell_index,evaled)#,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
         self.tp.show()
         
         '''

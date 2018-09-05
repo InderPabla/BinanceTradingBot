@@ -21,9 +21,9 @@ convert_to_json = False
 
 
 
-pair ="ONTUSDT"
-time = "5m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Aug_29.txt"
+pair ="ADABTC"
+time = "15m"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_03.txt"
 
 
 

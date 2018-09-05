@@ -12,7 +12,7 @@
     "strategy":["Strategy_ZigZag_v12"],
 	
 	"is_file_load":true,
-	"file":"Historical/ONTUSDT_5m_Binance_Numpy_Aug_29.txt.npy",
+	"file":"Historical/ONTUSDT_5m_Binance_Numpy_Sep_02.txt.npy",
 	"is_append":true,
 	"view":	{
 				"start":100000000,
