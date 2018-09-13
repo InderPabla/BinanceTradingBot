@@ -10,6 +10,7 @@ import requests as req
 from threading import Timer
 from datetime import datetime
 import threading
+from threading import Timer
 import time
 from colorama import Fore, Style, Back, init
 
@@ -130,6 +131,29 @@ class TraderControl:
     def timed_sleeper(self,tm,offset,part,closetime):
         if(tm == 0 or tm<0):
             print("Running In OFFSET:",offset) 
+            #time.sleep(offset)
+            t = Timer(offset, self.run_strategies)
+            t.start()
+        else:
+            self.server_time = self.tb.get_current_server_time()/1000
+            difference = closetime-self.server_time
+            if(difference<=0):
+                self.timed_sleeper(0,offset,part,closetime)
+            else:
+                if(difference>=part):
+                    print("Difference",difference,"Sleeping",part)
+                    t = Timer(part, self.timed_sleeper,(1,offset,part,closetime))
+                    t.start()
+                else:
+                    print("Difference",difference,"Sleeping",difference)
+                    t = Timer(difference, self.timed_sleeper,(1,offset,part,closetime))
+                    t.start()
+
+
+
+        '''
+        if(tm == 0 or tm<0):
+            print("Running In OFFSET:",offset) 
             time.sleep(offset)
             self.run_strategies()
         else:
@@ -147,36 +171,6 @@ class TraderControl:
                     time.sleep(difference)
                     self.timed_sleeper(1,offset,part,closetime)
         '''
-        if(tm==0):
-            print("Running In OFFSET:",offset) 
-            time.sleep(offset)
-            self.run_strategies()
-        else:
-            newTm = -1
-            sleepVal = -1
-            
-            if(tm>0):
-                if(tm>part):
-                    sleepVal = part
-                    newTm = tm-part
-                elif(tm<part):
-                    newTm  =0
-                    sleepVal = tm
-                else:
-                    newTm = 0
-                    sleepVal = part
-                print("New Time",newTm,"Sleeping",sleepVal) 
-                time.sleep(sleepVal)
-                self.timed_sleeper(newTm,offset,part)
-            
-            else:
-                self.timed_sleeper(0,offset,part)    
-                
-            '''    
-            
-            
-            
-    
                        
     def run_strategies(self):
         self.api_call_count = self.api_call_count +1
