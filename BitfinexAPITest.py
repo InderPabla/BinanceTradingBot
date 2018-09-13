@@ -11,6 +11,7 @@ from TraderControl import TraderControl as TraderControl
 from TraderPlot import TraderPlot as TraderPlot
 from TraderDetail import TraderDetail as TraderDetail
 from TraderControl import TraderControl as TraderControl
+from datetime import datetime
 import numpy as np
 
 import codecs, json 
@@ -23,13 +24,15 @@ convert_to_json = False
 
 pair ="ONTUSDT"
 time = "5m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_05.txt"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_11.txt"
 
 
 
 if(convert_to_json==False):
     tc = TraderControl(config,None)
-    ticksICX = tc.historical(time,pair,"2018-03-10") #2015-02-24T13:00:00-00:00
+    date = "2018-05-10"
+    utcdate = datetime.strptime(date, '%Y-%m-%d').strftime ("%Y-%m-%d %H:%M:%S")
+    ticksICX = tc.historical(time,pair,utcdate) #2015-02-24T13:00:00-00:00
     
     
     

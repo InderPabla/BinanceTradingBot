@@ -5,10 +5,10 @@ import numpy as np
 from colorama import Fore, Style, Back, init
 
 def pin(foreColor):
-        return foreColor+Style.BRIGHT
+        return Style.BRIGHT+foreColor
     
 def rst():
-        return Fore.WHITE+Style.BRIGHT
+        return Fore.WHITE+Style.BRIGHT+Back.RESET
     
 class TraderStrategy(object):
     
@@ -136,7 +136,7 @@ class TraderStrategy(object):
         profit_low = 0.0
 
         amount = 0 #(self.tc.asset_amount/self.ops['close'][len(self.ops['close'])-1])
-        print("Asset amount",self.tc.asset_amount," Current close",self.ops['close'][0])
+        
 
         column_names = ('TRADE #','SELL INDEX', 'BUY', 'SELL', 'AMOUNT', 'NORM','TTL NORM','LOW','TLL LOW')
 
@@ -161,9 +161,9 @@ class TraderStrategy(object):
 
         USD_CONVERT = self.tc.asset_price
         
-        print("USD CONV",USD_CONVERT," Amount",amount)
-        
-        print("NUMBER OF SELLS",len(self.sell_index))
+        print(pin(Fore.YELLOW)+"\tAsset amount",self.tc.asset_amount," Current close",str(self.ops['close'][0])+rst())
+        print(pin(Fore.YELLOW)+"\tUSD CONV",USD_CONVERT," Amount",str(amount)+rst())
+        print(pin(Fore.YELLOW)+"\tNUMBER OF SELLS",str(len(self.sell_index))+rst())
         
         evaled["colors"].append(Fore.WHITE)
         for i in range(0,len(self.buy_index)):
@@ -206,7 +206,7 @@ class TraderStrategy(object):
                 evaled["selLow"].append(str(sell_low_price))
                 evaled["sellNormal"].append(str(sell_normal_price))
                 
-                if(profit_low<=0): 
+                if(profit_low_new<=0): 
                     evaled["colors"].append(Fore.RED) 
                 else: 
                     evaled["colors"].append(Fore.GREEN)
@@ -231,19 +231,12 @@ class TraderStrategy(object):
             else:
                 evaled["amount"].append(str(amount))
                 
-        #table = Table([count,sell_indexs,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW], names=column_names)    
+   
         tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
         tableVals2 = np.array(tableVals).T.tolist()
-        #tableVals2 = tableVals2.reshape([tableVals2.shape[1],tableVals2.shape[2]])
-    
-        #tableVals2.transpose()
-        #print(tableVals2)
+
         self.print_table(tableVals2, evaled["colors"],header=column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=True)
-        
-        #table = Table(tableVals, names=column_names)   
-        #Table.pprint(table)
-        #Table.pprint(table,max_lines=2)
-        
+
         if(self.tc.isPlot==True):
             self.plot(ops,self.buy_index,self.sell_index,evaled)
 

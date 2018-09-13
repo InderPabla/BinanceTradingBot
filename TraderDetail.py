@@ -8,6 +8,13 @@ import warnings
 
 from datetime import datetime
 
+
+from colorama import Fore, Style, Back, init
+def pin(foreColor):
+        return Style.BRIGHT+foreColor
+def rst():
+        return Fore.WHITE+Style.BRIGHT+Back.RESET
+
 warnings.filterwarnings(action='ignore', category=DeprecationWarning)
 
 class TraderDetail:
@@ -42,7 +49,7 @@ class TraderDetail:
             self.max_view = max_view_amount
             
             if(len_print==True):
-                print("Kline Len",len(self.kline))
+                print(pin(Fore.YELLOW+Style.NORMAL)+"Kline Len",str(len(self.kline))+rst())
             
             if(self.start_index>=len(self.kline)):
                 self.start_index = len(self.kline)-self.max_view
@@ -65,7 +72,7 @@ class TraderDetail:
                 found_index = i
                 break
         if(self.len_print==True):
-            print("Found Index:",found_index,", Leftover:",((len(kline1)-1)-found_index))
+            print(pin(Fore.YELLOW+Style.NORMAL)+"[Found Index:",found_index,", Leftover:",((len(kline1)-1)-found_index),"]"+rst())
 
         return np.concatenate((kline1[0:found_index],kline2))
         

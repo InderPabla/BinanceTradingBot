@@ -138,9 +138,7 @@ class Strategy (TraderStrategy):
         ops["closeatrlow"] = ops['close']-(ops["atr"]*2)
         ops["closeatrhigh"] = ops['close']+(ops["atr"]*2)
         
-        print(int(ops["closetime"][0]))
-        
-        
+
         ops = dtl.normalize_view(ops)
         
         evaled = self.define_strategy(ops) #define a custom staratgy using ops
@@ -593,13 +591,3 @@ class Strategy (TraderStrategy):
     ###########################################################################
     ###########################################################################
     '''
-    
-    
-
-if __name__=="__main__":
-    print("Main Start")
-    config = 'config.json'
-    tc = TraderControl(config,None)
-    tc.run_strategies() 
-        
-        

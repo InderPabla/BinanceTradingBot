@@ -1,7 +1,7 @@
 
 
 from TraderBinance import TraderBinance as TraderBinance
-
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import json as json
@@ -14,9 +14,11 @@ import time
 from colorama import Fore, Style, Back, init
 
 def pin(foreColor):
-        return foreColor+Style.BRIGHT
+        return Style.BRIGHT+foreColor
 
-
+    
+def rst():
+        return Fore.WHITE+Style.BRIGHT+Back.RESET
     
 class TraderControl:
     KEY_KEY = 'key'
@@ -55,7 +57,7 @@ class TraderControl:
         self.asset_price = self.get_asset_price()
         
         self.asset_amount = self.currency_amount/self.asset_price
-        print("Asset Price in Dollars",self.asset_price,self.asset_amount,self.currency_amount)
+        print(pin(Fore.CYAN+Style.NORMAL)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount)+rst())
         
         self.pair = self.get_pair()
         self.time = self.get_time_frame()
@@ -82,6 +84,7 @@ class TraderControl:
         self.server_time = 0
         self.api_call_count = 0
         self.max_api_call_count = 100
+        self.itteration_count = 0 
         '''
         if(not self.config==None):
        
@@ -119,7 +122,7 @@ class TraderControl:
         import_strategies = self.get_strategies()
         for i in range(0,len(import_strategies)):
             import_string = self.config_data[self.KEY_STRA_BASE]+import_strategies[i]+'.Strategy'
-            print(import_string)
+            print(pin(Fore.CYAN+Style.NORMAL)+import_string+rst())
             strategy = self.custom_import(import_string)    
             strategy_object = strategy(self)
             self.strategies.append(strategy_object)
@@ -179,7 +182,7 @@ class TraderControl:
         self.api_call_count = self.api_call_count +1
         if(self.api_call_count>self.max_api_call_count):
             return
-        print(pin(Fore.WHITE)+"===================OPENING=====================")
+        print(pin(Fore.GREEN)+"OPEN:"+rst())
         self.initilize_strategies()
         self.get_kline_candles()
         
@@ -192,9 +195,9 @@ class TraderControl:
             look_back_action_index = 2 if(difference_time>0) else 1
            
             if(difference_time<0):
-                print("DIFF LESS THAN 0",difference_time)
+                print("\t","DIFF LESS THAN 0",difference_time)
                 time.sleep(1)
-                print(pin(Fore.WHITE)+"===================CLOSING=====================")
+                print(pin(Fore.GREEN)+"CLOSE:"+rst())
                 self.run_strategies()
                 return
             
@@ -202,48 +205,47 @@ class TraderControl:
             ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy()
  
             
-            print("========================================")
-            #print(self.real_kline[len(self.real_kline)-1])
-            print("Opentime:",datetime.fromtimestamp(latest_open_time).isoformat(' '),"Closetime:",datetime.fromtimestamp(latest_close_time).isoformat(' '))
-            print("Servertime:",datetime.fromtimestamp(self.server_time).isoformat(' '))
-            print("Differencetime(s):",difference_time)
+            print("\t","========================================")
+            print("\t","Opentime:",datetime.fromtimestamp(latest_open_time).isoformat(' '),"Closetime:",datetime.fromtimestamp(latest_close_time).isoformat(' '))
+            print("\t","Servertime:",datetime.fromtimestamp(self.server_time).isoformat(' '))
+            print("\t","Differencetime(s):",difference_time)
             
             
-            if(len(buy_index)>0):
+            if(len(buy_index)>=5):
                 if(len(sell_index)==len(buy_index)):
-                    print("===BUY ORDER===")
+                    print()    
+                    pass
+                else:
+                    
+                    pass
+                
+                '''
+                if(len(sell_index)==len(buy_index)):
+                    print("    ","===BUY ORDER===")
                     if(sell_index[len(sell_index)-1]==(len(ops["close"])-look_back_action_index)):
-                        print("CORRECT [BUY] ORDER COMMING THROUGH")
+                        print("    ","CORRECT [BUY] ORDER COMMING THROUGH")
                     else:
-                        print("PREVIOUS [SELL] ORDER: WAITING FOR BUY. Previous Sell Price Was: ",str(ops["close"][sell_index[len(sell_index)-1]]))
+                        print("    ","PREVIOUS [SELL] ORDER: WAITING FOR BUY. Previous Sell Price Was: ",str(ops["close"][sell_index[len(sell_index)-1]]))
                     
                 else:
-                    print("===SELL ORDER===")    
+                    print("    ","===SELL ORDER===")    
                     if(buy_index[len(buy_index)-1]==(len(ops["close"])-look_back_action_index)):
-                        print("CORRECT [SELL] ORDER COMMING THROUGH")
+                        print("    ","CORRECT [SELL] ORDER COMMING THROUGH")
                     else:
-                        print("PREVIOUS [BUY] ORDER: WAITING FOR SELL. Previous Buy Price Was: ",str(ops["close"][buy_index[len(buy_index)-1]]))
-                        
+                        print("    ","PREVIOUS [BUY] ORDER: WAITING FOR SELL. Previous Buy Price Was: ",str(ops["close"][buy_index[len(buy_index)-1]]))
+                 '''
+                 
             else:
-                print("NO BUY AND SELL ORDERS")
+                sys.exit(self.pair+" has too few orders. It is recommended this pair not be used. To override this logic change [forced_min_buy_stop] to false in configuration file.")
+
             
-            '''
-            if(len(buy_index)>0 and len(sell_index)>0):
-                print()
-            '''   
-            
-            
-            print(pin(Fore.WHITE)+"===================CLOSING=====================")    
+            print(pin(Fore.GREEN)+"CLOSE:"+rst())    
             print("=================SLEEP START===================")
             self.timed_sleeper(difference_time,1,60,latest_close_time)
             #threading.Timer(difference_time, self.run_strategies).start()
             
         else:
-            print('NO TRADES FOUND!!!!!!!!!')
-            '''
-            for i in range(0,len(self.strategies)):
-                self.strategies[0].run_strategy()
-            '''
+            sys.exit(self.pair+" has no trades. It is recommended this pair not be used. To override this logic change [forced_min_buy_stop] to false in configuration file.")
         
         
         
