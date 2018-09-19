@@ -43,6 +43,10 @@ class TraderStrategy(object):
     @abc.abstractmethod 
     def plot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
         raise NotImplementedError("Method should be implemented in subclass.")  
+
+    @abc.abstractmethod 
+    def profitPlot(self,ops,buy_index,sell_index,evaled):
+        raise NotImplementedError("Method should be implemented in subclass.")  
     
     @abc.abstractmethod 
     def plot_sell(self,ops,index,size):
@@ -115,14 +119,14 @@ class TraderStrategy(object):
                             buy_state = True 
                         elif(sell_input=='4'):
                             break
-                        
-                    
-            
+
             return self.evaluate_strategy(ops)
         else:
             if(self.tc.isPlot==True):
-                self.plot(ops,[],[])
+                self.plot(ops,0,[],[])
                 
+            if(self.tc.isProfitPlot):
+                self.profitPlot(ops,0,[],[])
             return {}
         
     def append_buy(self,index):
@@ -161,9 +165,9 @@ class TraderStrategy(object):
 
         USD_CONVERT = self.tc.asset_price
         
-        print(pin(Fore.YELLOW)+"\tAsset amount",self.tc.asset_amount," Current close",str(self.ops['close'][0])+rst())
-        print(pin(Fore.YELLOW)+"\tUSD CONV",USD_CONVERT," Amount",str(amount)+rst())
-        print(pin(Fore.YELLOW)+"\tNUMBER OF SELLS",str(len(self.sell_index))+rst())
+        print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+"Asset amount",self.tc.asset_amount," Current close",str(self.ops['close'][0])+rst())
+        print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+"USD CONV",USD_CONVERT," Amount",str(amount)+rst())
+        print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+"NUMBER OF SELLS",str(len(self.sell_index))+rst())
         
         evaled["colors"].append(Fore.WHITE)
         for i in range(0,len(self.buy_index)):
@@ -237,8 +241,11 @@ class TraderStrategy(object):
 
         self.print_table(tableVals2, evaled["colors"],header=column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=True)
 
+        if(self.tc.isProfitPlot==True):
+            self.profitPlot(ops,self.buy_index,self.sell_index,evaled)
         if(self.tc.isPlot==True):
             self.plot(ops,self.buy_index,self.sell_index,evaled)
+        
 
         return evaled
     

@@ -1,18 +1,25 @@
 
 
 from TraderBinance import TraderBinance as TraderBinance
-import sys
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import json as json
 import numpy as np
 import requests as req
-from threading import Timer
+
 from datetime import datetime
-import threading
-from threading import Timer
+
+
 import time
 from colorama import Fore, Style, Back, init
+
+import sys
+import signal
+import threading
+from threading import Timer
+
+
 
 def pin(foreColor):
         return Style.BRIGHT+foreColor
@@ -41,6 +48,7 @@ class TraderControl:
     KEY_PAD = 'pad'
     KEY_APPEND = 'is_append'
     KEY_PLOT = 'plot'
+    KEY_IS_PROFIT_PLOT = 'profitPlot'
     
     def __init__(self,config,filePath):
         
@@ -58,7 +66,7 @@ class TraderControl:
         self.asset_price = self.get_asset_price()
         
         self.asset_amount = self.currency_amount/self.asset_price
-        print(pin(Fore.CYAN+Style.NORMAL)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount)+rst())
+        print(pin(Fore.YELLOW)+"=====>"+pin(Fore.RED)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount)+rst())
         
         self.pair = self.get_pair()
         self.time = self.get_time_frame()
@@ -81,11 +89,14 @@ class TraderControl:
         self.pad_view = self.config_data[self.KEY_VIEW][self.KEY_PAD]
         
         self.isPlot = self.config_data[self.KEY_VIEW][self.KEY_PLOT]=="true"
+        self.isProfitPlot = self.config_data[self.KEY_VIEW][self.KEY_IS_PROFIT_PLOT]=="true"
         
         self.server_time = 0
         self.api_call_count = 0
         self.max_api_call_count = 100
         self.itteration_count = 0 
+        self.waitThread = None;
+
         '''
         if(not self.config==None):
        
@@ -101,13 +112,7 @@ class TraderControl:
                                           0,0,0,0])
             self.loaded_kline = np.array(self.loaded_kline)
         '''
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
-    # HISTORIAL DATA + NEW DATA IS VERY IMPORTANT!!!!!!!!!!!!!!!!!!!
+    
     def get_recent_candle(self,use_config=True,pair=""):
         if use_config == True:
             pair = self.pair
@@ -123,37 +128,15 @@ class TraderControl:
         import_strategies = self.get_strategies()
         for i in range(0,len(import_strategies)):
             import_string = self.config_data[self.KEY_STRA_BASE]+import_strategies[i]+'.Strategy'
-            print(pin(Fore.CYAN+Style.NORMAL)+import_string+rst())
+            print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+import_string+rst())
             strategy = self.custom_import(import_string)    
             strategy_object = strategy(self)
             self.strategies.append(strategy_object)
 
-    def timed_sleeper(self,tm,offset,part,closetime):
+    def timed_sleeper(self,tm,offset,part,closetime,req=0):
         if(tm == 0 or tm<0):
-            print("Running In OFFSET:",offset) 
-            #time.sleep(offset)
-            t = Timer(offset, self.run_strategies)
-            t.start()
-        else:
-            self.server_time = self.tb.get_current_server_time()/1000
-            difference = closetime-self.server_time
-            if(difference<=0):
-                self.timed_sleeper(0,offset,part,closetime)
-            else:
-                if(difference>=part):
-                    print("Difference",difference,"Sleeping",part)
-                    t = Timer(part, self.timed_sleeper,(1,offset,part,closetime))
-                    t.start()
-                else:
-                    print("Difference",difference,"Sleeping",difference)
-                    t = Timer(difference, self.timed_sleeper,(1,offset,part,closetime))
-                    t.start()
-
-
-
-        '''
-        if(tm == 0 or tm<0):
-            print("Running In OFFSET:",offset) 
+            sys.stdout.write("\r" + "OFFSET (s): "+str(offset)+"\n")
+            sys.stdout.flush()
             time.sleep(offset)
             self.run_strategies()
         else:
@@ -163,16 +146,56 @@ class TraderControl:
                 self.timed_sleeper(0,offset,part,closetime)
             else:
                 if(difference>=part):
-                    print("Difference",difference,"Sleeping",part)
+                    sys.stdout.write("\r" + "Next Candle Open(s): "+str(difference))
+                    sys.stdout.flush()
                     time.sleep(part)
                     self.timed_sleeper(1,offset,part,closetime)
                 else:
-                    print("Difference",difference,"Sleeping",difference)
+                    sys.stdout.write("\r" + "Next Candle Open(s): "+str(difference))
+                    sys.stdout.flush()
                     time.sleep(difference)
                     self.timed_sleeper(1,offset,part,closetime)
+
         '''
-                       
+        self.waitThread = None
+        if(tm == 0 or tm<0):
+            print("Running In OFFSET:",offset) 
+            self.waitThread = Timer(offset, self.run_strategies)
+            self.waitThread.isDaemon = True
+            self.waitThread.start()
+        else:
+            self.server_time = self.tb.get_current_server_time()/1000
+            difference = closetime-self.server_time
+            if(difference<=0):
+                self.timed_sleeper(0,offset,part,closetime)
+            else:
+                if(difference>=part):
+                    print("Difference",difference,"Sleeping",part)
+                    self.waitThread = Timer(part, self.timed_sleeper,(1,offset,part,closetime))
+                    self.waitThread.isDaemon = True
+                    self.waitThread.start()
+                else:
+                    print("Difference",difference,"Sleeping",difference)
+                    self.waitThread = Timer(difference, self.timed_sleeper,(1,offset,part,closetime))
+                    self.waitThread.isDaemon = True
+                    self.waitThread.start()
+        '''
+
+    def signal_handler(self,sig, frame):
+        #print('You pressed Ctrl+C!')
+        if(self.waitThread is not None):
+            self.waitThread.cancel()
+            self.waitThread = None
+        sys.exit(0)
+    
+
     def run_strategies(self):
+        
+        if(self.api_call_count == 0):
+            signal.signal(signal.SIGINT, self.signal_handler)
+            #print('Press Ctrl+C To Exist') 
+        
+          
         self.api_call_count = self.api_call_count +1
         if(self.api_call_count>self.max_api_call_count):
             return
@@ -189,7 +212,7 @@ class TraderControl:
             look_back_action_index = 2 if(difference_time>0) else 1
            
             if(difference_time<0):
-                print("\t","DIFF LESS THAN 0",difference_time)
+                print(pin(Fore.RED)+"=====>"+pin(Fore.RED)+"DIFF LESS THAN 0:",difference_time)
                 time.sleep(1)
                 print(pin(Fore.GREEN)+"CLOSE:"+rst())
                 self.run_strategies()
@@ -198,22 +221,30 @@ class TraderControl:
             
             ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy()
  
-            
-            print("\t","========================================")
-            print("\t","Opentime:",datetime.fromtimestamp(latest_open_time).isoformat(' '),"Closetime:",datetime.fromtimestamp(latest_close_time).isoformat(' '))
-            print("\t","Servertime:",datetime.fromtimestamp(self.server_time).isoformat(' '))
-            print("\t","Differencetime(s):",difference_time)
+  
+            print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Opentime:",datetime.fromtimestamp(latest_open_time).isoformat(' '),"Closetime:",datetime.fromtimestamp(latest_close_time).isoformat(' '))
+            print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Servertime:",datetime.fromtimestamp(self.server_time).isoformat(' '))
+            print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Differencetime(s):",difference_time)
             
             
             if(len(buy_index)>=5):
+                #print(sell_index,str(len(sell_index)))
+                #print(buy_index,str(len(buy_index)))
                 if(len(sell_index)==len(buy_index)):
-                    print()    
-                    pass
+                    if(sell_index[len(sell_index)-1]==(len(ops["close"])-look_back_action_index)):
+                        print(pin(Fore.RED)+">>>>> CURRENT ACTION: [SELL NOW] <<<<<"+rst())
+                    else:
+                        print(pin(Fore.RED)+">>>>> CURRENT ACTION: ["+pin(Fore.GREEN)+"WAIT FOR BUY"+pin(Fore.RED)+"] <<<<<"+rst())
+
                 else:
+                    if(buy_index[len(buy_index)-1]==(len(ops["close"])-look_back_action_index)):
+                        print(pin(Fore.GREEN)+">>>>> CURRENT ACTION: [BUY NOW] <<<<<"+rst())
+                    else:
+                        print(pin(Fore.GREEN)+">>>>> CURRENT ACTION: ["+pin(Fore.RED)+"WAIT FOR SELL"+pin(Fore.GREEN)+"] <<<<<"+rst())
                     
-                    pass
                 
                 '''
+
                 if(len(sell_index)==len(buy_index)):
                     print("    ","===BUY ORDER===")
                     if(sell_index[len(sell_index)-1]==(len(ops["close"])-look_back_action_index)):
@@ -234,8 +265,8 @@ class TraderControl:
 
             
             print(pin(Fore.GREEN)+"CLOSE:"+rst())    
-            print("=================SLEEP START===================")
-            self.timed_sleeper(difference_time,1,60,latest_close_time)
+            #print("=================SLEEP START===================")
+            self.timed_sleeper(difference_time,1,5,latest_close_time)
             #threading.Timer(difference_time, self.run_strategies).start()
             
         else:

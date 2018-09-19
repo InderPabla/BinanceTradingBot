@@ -267,7 +267,7 @@ class TraderPlot:
     
     def plot_profit(self,ops,buy_index,sell_index,evaled):
         #for i in range(0,len(risk_NORMAL)):
-        self.fig_cust(12,5)
+        self.fig_cust(6,2.5)
         if(len(buy_index)==len(sell_index)):
             self.plot(evaled["normalTotal"],'red')
             self.plot(evaled["lowTotal"],'lime')

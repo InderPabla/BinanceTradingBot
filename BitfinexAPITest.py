@@ -24,7 +24,7 @@ convert_to_json = False
 
 pair ="ONTUSDT"
 time = "5m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_11.txt"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_18.txt"
 
 
 

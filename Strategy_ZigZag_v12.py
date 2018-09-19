@@ -214,12 +214,14 @@ class Strategy (TraderStrategy):
             return 'lime',0
         else:
             return 'red',0   
-        
-    def plot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
-        self.tp.temp_plt()
+
+    def profitPlot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+        #self.tp.temp_plt()
         self.tp.plot_profit(ops,buy_index,sell_index,evaled)#,risk_NORMAL,total_NORMAL,risk_LOW,total_LOW)
         self.tp.show()
-        
+
+    def plot(self,ops,buy_index,sell_index,evaled):#risk_NORMAL,total_NORMAL,risk_LOW,total_LOW):
+       
         '''
         self.tp.fig()
         self.tp.plot_time( ops["closetime"],'grey','-')
@@ -264,7 +266,7 @@ class Strategy (TraderStrategy):
         '''
         
         
-        self.tp.fig_cust(20,6)
+        self.tp.fig_cust(20/1.5,6/1.5)
         self.tp.plot_time( ops["closetime"],'grey','-')
         self.tp.plot_orders(ops,buy_index,sell_index,"lime","red","main_dtlclose")
         self.tp.custom_plot_color_decision(ops['close'],ops,self.pm3)

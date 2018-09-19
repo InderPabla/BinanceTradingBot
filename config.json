@@ -5,21 +5,22 @@
     "asset":"USDT",
     
     "currency":"USD",
-    "amount":1000,
+    "amount":250,
     
     "time":"5m",
     "strategy_base":"",
     "strategy":["Strategy_ZigZag_v12"],
 	
 	"is_file_load":true,
-	"file":"Historical/ONTUSDT_5m_Binance_Numpy_Sep_11.txt.npy",
+	"file":"Historical/ONTUSDT_5m_Binance_Numpy_Sep_18.txt.npy",
 	"is_append":true,
 	"view":	{
 				"start":100000000,
 				"max":2000,
 				"pad":0,
 				"strip":0,
-				"plot":"true"
+				"plot":"true",
+				"profitPlot":"true"
 			}
         
 }
