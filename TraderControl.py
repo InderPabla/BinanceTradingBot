@@ -13,7 +13,7 @@ from datetime import datetime
 
 import time
 from colorama import Fore, Style, Back, init
-
+init(convert=True)
 import sys
 import signal
 import threading
@@ -133,28 +133,28 @@ class TraderControl:
             strategy_object = strategy(self)
             self.strategies.append(strategy_object)
 
-    def timed_sleeper(self,tm,offset,part,closetime,req=0):
+    def timed_sleeper(self,tm,offset,part,closetime,req=0,previous_buy_index=-1):
         if(tm == 0 or tm<0):
             sys.stdout.write("\r" + "OFFSET (s): "+str(offset)+"\n")
             sys.stdout.flush()
             time.sleep(offset)
-            self.run_strategies()
+            self.run_strategies(previous_buy_index=previous_buy_index)
         else:
             self.server_time = self.tb.get_current_server_time()/1000
             difference = closetime-self.server_time
             if(difference<=0):
-                self.timed_sleeper(0,offset,part,closetime)
+                self.timed_sleeper(0,offset,part,closetime,previous_buy_index=previous_buy_index)
             else:
                 if(difference>=part):
                     sys.stdout.write("\r" + "Next Candle Open(s): "+str(difference))
                     sys.stdout.flush()
                     time.sleep(part)
-                    self.timed_sleeper(1,offset,part,closetime)
+                    self.timed_sleeper(1,offset,part,closetime,previous_buy_index=previous_buy_index)
                 else:
                     sys.stdout.write("\r" + "Next Candle Open(s): "+str(difference))
                     sys.stdout.flush()
                     time.sleep(difference)
-                    self.timed_sleeper(1,offset,part,closetime)
+                    self.timed_sleeper(1,offset,part,closetime,previous_buy_index=previous_buy_index)
 
         '''
         self.waitThread = None
@@ -189,12 +189,19 @@ class TraderControl:
         sys.exit(0)
     
 
-    def run_strategies(self):
+    def test_run_strategy(self):
+        self.initilize_strategies()
+        self.get_kline_candles()
+        ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy(previous_buy_index=-1)
+        return ops,buy_index,sell_index,evaled
+        #return -1
         
+    def run_strategies(self,previous_buy_index=-1):
+        '''
         if(self.api_call_count == 0):
             signal.signal(signal.SIGINT, self.signal_handler)
             #print('Press Ctrl+C To Exist') 
-        
+        '''
           
         self.api_call_count = self.api_call_count +1
         if(self.api_call_count>self.max_api_call_count):
@@ -215,46 +222,55 @@ class TraderControl:
                 print(pin(Fore.RED)+"=====>"+pin(Fore.RED)+"DIFF LESS THAN 0:",difference_time)
                 time.sleep(1)
                 print(pin(Fore.GREEN)+"CLOSE:"+rst())
-                self.run_strategies()
+                self.run_strategies(previous_buy_index=previous_buy_index)
                 return
             
             
-            ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy()
- 
-  
+            ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy(previous_buy_index=previous_buy_index)
+            last_active_index = len(ops["close"])-look_back_action_index
+            num_of_sells = len(sell_index)
+            num_of_buys = len(buy_index)
+            last_sell_index = sell_index[num_of_sells-1]
+            last_buy_index = buy_index[num_of_buys-1]
+
             print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Opentime:",datetime.fromtimestamp(latest_open_time).isoformat(' '),"Closetime:",datetime.fromtimestamp(latest_close_time).isoformat(' '))
             print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Servertime:",datetime.fromtimestamp(self.server_time).isoformat(' '))
             print(pin(Fore.GREEN)+"=====>"+pin(Fore.WHITE)+"Differencetime(s):",difference_time)
             
             
-            if(len(buy_index)>=5):
-                #print(sell_index,str(len(sell_index)))
-                #print(buy_index,str(len(buy_index)))
-                if(len(sell_index)==len(buy_index)):
-                    if(sell_index[len(sell_index)-1]==(len(ops["close"])-look_back_action_index)):
+            if(num_of_buys>=5):
+                if(num_of_sells==num_of_buys):
+                    previous_buy_index = -1
+                    if(last_sell_index==last_active_index):
                         print(pin(Fore.RED)+">>>>> CURRENT ACTION: [SELL NOW] <<<<<"+rst())
+                        
                     else:
                         print(pin(Fore.RED)+">>>>> CURRENT ACTION: ["+pin(Fore.GREEN)+"WAIT FOR BUY"+pin(Fore.RED)+"] <<<<<"+rst())
 
                 else:
-                    if(buy_index[len(buy_index)-1]==(len(ops["close"])-look_back_action_index)):
+                    if(previous_buy_index==-1):
+                        previous_buy_index = last_buy_index
+
+                    if(last_buy_index==last_active_index):
                         print(pin(Fore.GREEN)+">>>>> CURRENT ACTION: [BUY NOW] <<<<<"+rst())
                     else:
                         print(pin(Fore.GREEN)+">>>>> CURRENT ACTION: ["+pin(Fore.RED)+"WAIT FOR SELL"+pin(Fore.GREEN)+"] <<<<<"+rst())
+                        
                     
-                
+                    print(pin(Fore.GREEN)+">>>>> "+pin(Fore.YELLOW)+"Most Recent Buy Index: "+str((previous_buy_index))+rst())
+                    previous_buy_index = previous_buy_index-1
                 '''
 
                 if(len(sell_index)==len(buy_index)):
                     print("    ","===BUY ORDER===")
-                    if(sell_index[len(sell_index)-1]==(len(ops["close"])-look_back_action_index)):
+                    if(sell_index[len(sell_index)-1]==last_active_index):
                         print("    ","CORRECT [BUY] ORDER COMMING THROUGH")
                     else:
                         print("    ","PREVIOUS [SELL] ORDER: WAITING FOR BUY. Previous Sell Price Was: ",str(ops["close"][sell_index[len(sell_index)-1]]))
                     
                 else:
                     print("    ","===SELL ORDER===")    
-                    if(buy_index[len(buy_index)-1]==(len(ops["close"])-look_back_action_index)):
+                    if(buy_index[len(buy_index)-1]==last_active_index):
                         print("    ","CORRECT [SELL] ORDER COMMING THROUGH")
                     else:
                         print("    ","PREVIOUS [BUY] ORDER: WAITING FOR SELL. Previous Buy Price Was: ",str(ops["close"][buy_index[len(buy_index)-1]]))
@@ -266,7 +282,7 @@ class TraderControl:
             
             print(pin(Fore.GREEN)+"CLOSE:"+rst())    
             #print("=================SLEEP START===================")
-            self.timed_sleeper(difference_time,1,5,latest_close_time)
+            self.timed_sleeper(difference_time,1,5,latest_close_time,previous_buy_index=previous_buy_index)
             #threading.Timer(difference_time, self.run_strategies).start()
             
         else:

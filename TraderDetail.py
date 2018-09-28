@@ -72,7 +72,7 @@ class TraderDetail:
                 found_index = i
                 break
         if(self.len_print==True):
-            print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+"[Found Index:",found_index,", Leftover:",((len(kline1)-1)-found_index),"]"+rst())
+            print(pin(Fore.RED)+"=====>"+pin(Fore.YELLOW)+"MERGING [Found Index:",found_index,", Leftover:",((len(kline1)-1)-found_index),"]"+rst())
 
         return np.concatenate((kline1[0:found_index],kline2))
         

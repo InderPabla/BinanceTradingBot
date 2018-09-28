@@ -90,7 +90,8 @@ class TraderMath:
         return a*b
     
     def divide_matrix(self,a,b):
-        return np.divide(a,b)
+        with np.errstate(divide='ignore',invalid='ignore'):
+            return np.divide(a,b)
     
     def add_matrix(self,a,b):
         return a+b

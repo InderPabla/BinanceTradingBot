@@ -18,7 +18,7 @@ class Strategy (TraderStrategy):
         self.run = True
         self.visual_sell = False
         self.visual_buy = False
- 
+        self.previous_buy_index =-1
         #self.trueBTCPriceKline = self.tc.loadFromFile('Historical/BTCUSDT_1h_Binance_Numpy_Aug_7.txt.npy')
         
     '''
@@ -26,7 +26,8 @@ class Strategy (TraderStrategy):
     ###########################################################################
     '''
         
-    def run_strategy(self):
+    def run_strategy(self,previous_buy_index=-1):
+        self.previous_buy_index = previous_buy_index
         ops = {}
         
         hk_count = 1
@@ -404,13 +405,13 @@ class Strategy (TraderStrategy):
         weekday = stamp.weekday()
         if(weekday>=7):
             return False
-       
+
         
         if(self.cool_down_count>0):
             self.cool_down_count = self.cool_down_count-1
             return False
         
-       
+        
             
         
         '''
@@ -497,6 +498,8 @@ class Strategy (TraderStrategy):
         and ops["kamaeam1"][index]>ops["kamaeam1"][index-1]):
              return True
         
+        if(self.previous_buy_index==index):
+            return True
         
         return False
     

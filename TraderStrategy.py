@@ -23,7 +23,9 @@ class TraderStrategy(object):
         self.visual_sell = False
         self.visual_buy = False
         self.visual_sell_size = 500
-        
+        #column_names = ('TRADE #','SELL INDEX', 'BUY', 'SELL', 'AMOUNT', 'NORM','TTL NORM','LOW','TLL LOW')
+        self.column_names = ('#','Ix', 'B#', 'S#', 'A#', '$','$T','$$','$$T')
+
     @abc.abstractmethod
     def run_strategy(self):
         raise NotImplementedError("Method should be implemented in subclass.")
@@ -141,8 +143,7 @@ class TraderStrategy(object):
 
         amount = 0 #(self.tc.asset_amount/self.ops['close'][len(self.ops['close'])-1])
         
-
-        column_names = ('TRADE #','SELL INDEX', 'BUY', 'SELL', 'AMOUNT', 'NORM','TTL NORM','LOW','TLL LOW')
+        unknown = -1
 
         evaled = {
                 "low":[],
@@ -185,7 +186,7 @@ class TraderStrategy(object):
             amount = (self.tc.asset_amount/self.ops['close'][buy_index])
             
             if(sell_index>-1):
-                evaled["sellIndex"].append(self.sell_index[i])
+                evaled["sellIndex"].append(int(self.sell_index[i]))
                 evaled["count"].append(i+1)
 
                 sell_normal_price = self.ops['close'][sell_index]
@@ -197,17 +198,19 @@ class TraderStrategy(object):
 
                 profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
                 profit_normal = profit_normal+profit_normal_new
-                evaled["normal"].append('{:.2f}'.format(profit_normal_new))
-                evaled["normalTotal"].append('{:.2f}'.format(profit_normal))
+                evaled["normal"].append(round(profit_normal_new,2))
+                evaled["normalTotal"].append(round(profit_normal,2))
        
                 profit_low_new = ((sell_low_price-buy_low_price)*amount)*USD_CONVERT
                 profit_low = profit_low+profit_low_new
-                evaled["low"].append('{:.2f}'.format(profit_low_new))
-                evaled["lowTotal"].append('{:.2f}'.format(profit_low))
+
+                evaled["low"].append(round(profit_low_new,2))
+                evaled["lowTotal"].append(round(profit_low,2))
                 
-                evaled["buyLow"].append(str(buy_low_price))
+                evaled["buyLow"].append(buy_low_price)
                 evaled["buyNormal"].append(str(buy_normal_price))
-                evaled["selLow"].append(str(sell_low_price))
+
+                evaled["selLow"].append(sell_low_price)
                 evaled["sellNormal"].append(str(sell_normal_price))
                 
                 if(profit_low_new<=0): 
@@ -216,39 +219,78 @@ class TraderStrategy(object):
                     evaled["colors"].append(Fore.GREEN)
                 
             else:
-                evaled["sellIndex"].append(-1)    
+                evaled["sellIndex"].append(-1)
                 evaled["count"].append(i+1)
-                evaled["normal"].append('??')
-                evaled["normalTotal"].append('??')
-                evaled["low"].append('??')
-                evaled["lowTotal"].append('??')
+                evaled["normal"].append(-1)
+                evaled["normalTotal"].append(-1)
+                evaled["low"].append(-1)
+                evaled["lowTotal"].append(-1)
                 
-                evaled["buyLow"].append(str(buy_low_price))
+                evaled["buyLow"].append(buy_low_price)
                 evaled["buyNormal"].append(str(buy_normal_price))
-                evaled["selLow"].append('??')
+                evaled["selLow"].append(unknown)
                 evaled["sellNormal"].append('??')
                 
                 evaled["colors"].append(Fore.CYAN) 
              
             if(amount>0.5):
-                evaled["amount"].append('{:.2f}'.format(amount))
+                #evaled["amount"].append('{:.2f}'.format(amount))
+                #evaled["amount"].append(str(amount)[0:10])
+                evaled["amount"].append(round(amount,2))
             else:
-                evaled["amount"].append(str(amount))
+                evaled["amount"].append(round(amount,2))
+                #evaled["amount"].append(str(amount))
+                #evaled["amount"].append(str(amount)[0:10])
                 
-   
-        tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
-        tableVals2 = np.array(tableVals).T.tolist()
-
-        self.print_table(tableVals2, evaled["colors"],header=column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=True)
+        
+        evaled["buyLow"] = np.around(evaled["buyLow"],decimals=7)
+        evaled["selLow"] = np.around(evaled["selLow"],decimals=7)
+        #optimal_round = self.optimal_round_array(evaled["buyLow"])   
 
         if(self.tc.isProfitPlot==True):
+            self.plotTable(evaled)
             self.profitPlot(ops,self.buy_index,self.sell_index,evaled)
+
         if(self.tc.isPlot==True):
             self.plot(ops,self.buy_index,self.sell_index,evaled)
         
 
         return evaled
-    
+
+    def plotTable(self,evaled):
+        tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
+        tableVals2 = np.array(tableVals).T.tolist()   
+        self.print_table(tableVals2, evaled["colors"],header=self.column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=False)
+
+
+    def optimal_round_array(self,array):
+        optimal_round = -1
+        len_array = len(array)
+        for i in range(0,len_array):
+            new_round = self.optimal_round_value(array[i])
+            if(optimal_round==-1 or optimal_round<new_round):
+                optimal_round = new_round
+                
+        return optimal_round
+
+    def optimal_round_value(self,num):
+        str_num = str(num)
+        len_str = len(str_num)
+        optimal_round = -1
+        counter = 0
+
+        dot_index = str_num.find(".")
+        
+        if(dot_index==-1):
+            return optimal_round
+
+        for i in range(dot_index+1,len_str):
+            
+            counter = counter +1        
+
+        return optimal_round
+
+
     def print_table(self,items, colors, header=None, wrap=True, max_col_width=20, wrap_style="wrap", row_line=False, fix_col_width=False):
         ''' Prints a matrix of data as a human readable table. Matrix
         should be a list of lists containing any type of values that can
@@ -285,6 +327,7 @@ class TraderStrategy(object):
             current_item = 0
             row = items[current_item]
         while row:
+            #print("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
             color = colors[color_index]
             color_index = color_index+1
             is_extra = False
@@ -308,6 +351,11 @@ class TraderStrategy(object):
                         extra_line[col] = val[wrap_width:]
                         val = val[:wrap_width]
                 val = val.ljust(cwidth)
+                '''
+                print(val+"-------")
+                if(not isinstance(val,str) and len(val)>10):
+                    val = str(val)[0:max_col_width]    
+                '''   
                 values.append(val)
             
             print (pin(color)+' | '.join(values)+rst())

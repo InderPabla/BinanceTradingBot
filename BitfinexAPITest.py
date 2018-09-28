@@ -22,9 +22,9 @@ convert_to_json = False
 
 
 
-pair ="ONTUSDT"
+pair ="ADAUSDT"
 time = "5m"
-name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_18.txt"
+name = "Historical/"+pair+"_"+time+"_Binance_Numpy_Sep_26.txt"
 
 
 
