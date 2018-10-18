@@ -1,18 +1,18 @@
 {
     "key_base":"D:/InderTheGreat/Documents/bcred.json",
            
-    "base":"ADA",
-    "asset":"USDT",
+    "base":"MDA",
+    "asset":"ETH",
     
     "currency":"USD",
     "amount":250,
     
-    "time":"5m",
+    "time":"15m",
     "strategy_base":"",
     "strategy":["Strategy_ZigZag_v12"],
 	
 	"is_file_load":true,
-	"file":"Historical/ADAUSDT_5m_Binance_Numpy_Sep_26.txt.npy",
+	"file":"Historical/MDAETH_5m_Binance_Numpy_Oct_07.txt.npy",
 	"is_append":true,
 	"view":	{
 				"start":100000000,

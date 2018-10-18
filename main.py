@@ -3,6 +3,7 @@ import sys
 import signal
 import codecs, json 
 import numpy as np
+import json as json
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -110,13 +111,14 @@ if __name__=="__main__":
         print(buy_index)
         '''
         
-        from flask import request
+        from flask import request, abort
         from flask import Flask, jsonify
         from flask_cors import CORS, cross_origin
-        from datetime import timedelta
+        from dateutil.relativedelta import relativedelta
+        from datetime import datetime, timedelta
         from flask import make_response, current_app
         from functools import update_wrapper
-
+        import os, re
 
         app = Flask(__name__)
         CORS(app)
@@ -137,6 +139,126 @@ if __name__=="__main__":
             shutdown_server()
             return 'Server shutting down...'
     
+        @app.route('/config', methods=['GET'])
+        def get_config():
+            return json.dumps(json.load(open(config)))
+        
+        @app.route('/strategies', methods=['GET'])
+        def get_strategies():
+            
+            dirname, filename = os.path.split(os.path.abspath(__file__))
+            strat_list = os.listdir(dirname)
+            strategy_regex_py = re.compile(r'Strategy_[a-zA-Z0-9]+_v[0-9]+.py')
+            strategy_regex = re.compile(r'Strategy_[a-zA-Z0-9]+_v[0-9]+')
+            matched_list = []
+            for i in range(0,len(strat_list)):
+                if(bool(strategy_regex.match(strat_list[i])) and bool(strategy_regex_py.match(strat_list[i]))):
+                    matched_list.append(strat_list[i][:-3])
+                    
+            
+            
+            return json.dumps({'default':json.load(open(config))['strategy'],'strategies':matched_list})
+    
+        @app.route('/tickers', methods=['GET'])
+        def get_tickers():
+            tc = TraderControl(config,None)
+            return json.dumps(tc.get_tickers())
+        
+        @app.route('/init-strategy', methods=['POST'])
+        @app.errorhandler(404)
+        def get_init_strategy():
+            data = json.loads(request.data)
+            print(data)
+            time = data["time"]
+            pair = data["ticker"]
+            strategy = data["strategy"]
+            todayDate = datetime.today()
+            todayDateFormatted = todayDate.strftime('%Y-%m-%d')
+            file = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
+            
+            if(not os.path.exists(file)):
+                todayDate = datetime.today() - timedelta(days=1)
+                todayDateFormatted = todayDate.strftime('%Y-%m-%d')
+                file = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
+                print("New file not found, checking from yesterday",file)
+            
+            if(not os.path.exists(file)):
+                return jsonify({'error': file+" not found."}),404 
+                
+                
+            base = ""
+            asset = ""
+            
+            if(pair.endswith("BNB")):
+                asset = "BNB"
+                base = pair[0:len(pair)-3]
+            elif(pair.endswith("BTC")):
+                asset = "BTC"
+                base = pair[0:len(pair)-3]
+            elif(pair.endswith("ETH")):
+                asset = "ETH"
+                base = pair[0:len(pair)-3]
+            elif(pair.endswith("USDT")):
+                asset = "USDT"     
+                base = pair[0:len(pair)-4]
+            else:  
+                 return jsonify({'error': pair+" does not exist."}),404
+             
+            override = {"base":base,"asset":asset,"time":time,"file":file,"strategy":strategy}
+            print ("Override",override)
+            
+            tc = TraderControl(config,None,override=override)
+ 
+            ops,buy_index,sell_index,evaled = tc.test_run_strategy() 
+            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
+
+
+            return json.dumps(complete_ops,cls=MyEncoder)
+            
+            #return jsonify({'status': "niceee"})
+        
+        @app.route('/historical', methods=['POST'])
+        def get_historial():
+            data = json.loads(request.data)
+            
+            #try:
+            print(data)
+            
+            time = data["time"]
+            pair = data["ticker"]
+            
+            
+            todayDate = datetime.today()
+            todayDateFormatted = todayDate.strftime('%Y-%m-%d')
+            previousDate = todayDate - relativedelta(months=5)
+            previousDateFormatted = previousDate.strftime('%Y-%m-%d')
+
+            filename = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
+            
+            if(os.path.exists(filename)):
+                print(filename,"exists.")
+                return jsonify({'status': "success"})
+            
+            #check for previous day (don't really want to keep downloading every day)
+            todayDate = datetime.today() - timedelta(days=1)
+            todayDateFormatted = todayDate.strftime('%Y-%m-%d')
+            filename = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
+            
+            if(os.path.exists(filename)):
+                print("File from yesterday",filename,"exists.")
+                return jsonify({'status': "success"})
+
+            print(filename,"does not exists. Starting Download.")
+            tc = TraderControl(config,None)
+            utcdate = datetime.strptime(previousDateFormatted, '%Y-%m-%d').strftime ("%Y-%m-%d %H:%M:%S")
+            ticks = tc.historical(time,pair,utcdate)
+            print("Download for",pair,"-",time,"-",previousDateFormatted,"-",todayDateFormatted,"completed. Saving...")
+            np.save(filename,ticks)
+            print("Data saved under Historial folder.",filename)
+
+            return jsonify({'status': "success"})
+        
+        
         @app.route('/test1', methods=['GET'])
         #@crossdomain(origin=origin)
         def get_test1():
@@ -153,10 +275,10 @@ if __name__=="__main__":
             #print(evaled)
             
             ops,buy_index,sell_index,evaled = tc.test_run_strategy() 
-            #print(ops)
-            
-            #return jsonify({'tasks': ops})
-            return json.dumps(ops,cls=MyEncoder)
+            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
+
+
+            return json.dumps(complete_ops,cls=MyEncoder)
             
         app.run(debug=True)
 

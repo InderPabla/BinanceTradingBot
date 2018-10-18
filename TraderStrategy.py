@@ -155,7 +155,7 @@ class TraderStrategy(object):
                 
                 "buyLow":[],
                 "buyNormal":[],
-                "selLow":[],
+                "sellLow":[],
                 "sellNormal":[],
                 
                 "amount":[],
@@ -210,7 +210,7 @@ class TraderStrategy(object):
                 evaled["buyLow"].append(buy_low_price)
                 evaled["buyNormal"].append(str(buy_normal_price))
 
-                evaled["selLow"].append(sell_low_price)
+                evaled["sellLow"].append(sell_low_price)
                 evaled["sellNormal"].append(str(sell_normal_price))
                 
                 if(profit_low_new<=0): 
@@ -228,7 +228,7 @@ class TraderStrategy(object):
                 
                 evaled["buyLow"].append(buy_low_price)
                 evaled["buyNormal"].append(str(buy_normal_price))
-                evaled["selLow"].append(unknown)
+                evaled["sellLow"].append(unknown)
                 evaled["sellNormal"].append('??')
                 
                 evaled["colors"].append(Fore.CYAN) 
@@ -244,7 +244,7 @@ class TraderStrategy(object):
                 
         
         evaled["buyLow"] = np.around(evaled["buyLow"],decimals=7)
-        evaled["selLow"] = np.around(evaled["selLow"],decimals=7)
+        evaled["sellLow"] = np.around(evaled["sellLow"],decimals=7)
         #optimal_round = self.optimal_round_array(evaled["buyLow"])   
 
         if(self.tc.isProfitPlot==True):
@@ -258,7 +258,7 @@ class TraderStrategy(object):
         return evaled
 
     def plotTable(self,evaled):
-        tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["selLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
+        tableVals = [evaled["count"],evaled["sellIndex"],evaled["buyLow"],evaled["sellLow"],evaled["amount"],evaled["low"],evaled["lowTotal"],evaled["normal"],evaled["normalTotal"]]
         tableVals2 = np.array(tableVals).T.tolist()   
         self.print_table(tableVals2, evaled["colors"],header=self.column_names, wrap=False, max_col_width=10, wrap_style='wrap',row_line=False, fix_col_width=False)
 

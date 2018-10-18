@@ -1,0 +1,57 @@
+<div class="mat-elevation-z8">
+
+  <table mat-table #table [dataSource]="dataSource" matSort aria-label="Elements">
+
+    <ng-container matColumnDef="count">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Trade# </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.count}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="sellIndex">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Sell Index </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.sellIndex}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="buyLow">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Buy Price (Low) </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.buyLow}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="sellLow">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Sell Price (Low) </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.sellLow}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Traded Amount </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.amount}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="low">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Low Profit </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.low}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="lowTotal">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Low Total Profit </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.lowTotal}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="normal">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Normal Profit </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.normal}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="normalTotal">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Normal Total Profit </th>
+      <td mat-cell *matCellDef="let element" class="custclass"> {{element.normalTotal}} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns" class="custclass"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="custclass"></tr>
+
+  </table>
+  <mat-paginator #paginator [length]="dataSource.data.length" [pageIndex]="0" [pageSize]="5" [pageSizeOptions]="[5, 10, 25, 50]">
+  </mat-paginator>
+
+</div>

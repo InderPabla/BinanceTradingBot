@@ -1,0 +1,26 @@
+.matFormSpace{
+    margin-right: 1rem;
+}
+
+.darkOption {
+    color: white !important;
+    background: black !important;
+    border: solid white 1px !important;
+    height:2em !important;
+}
+
+.grayBorder {
+    border: 2px solid gray;
+}
+
+.controlPad {
+    padding-top:1rem;
+}
+
+.controlLine {
+    border-bottom: orange 2px solid;
+}
+
+.custclass {
+    padding-right: 1em;
+}

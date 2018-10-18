@@ -50,18 +50,27 @@ class TraderControl:
     KEY_PLOT = 'plot'
     KEY_IS_PROFIT_PLOT = 'profitPlot'
     
-    def __init__(self,config,filePath):
+    def __init__(self,config,filePath,override=None):
         
         self.className = "TraderControl"
         self.config = config
         self.filePath = filePath
         self.config_data = json.load(open(config))
-
+        
+       
+            
         self.config_data[self.KEY_KEY] = json.load(open(self.config_data[self.KEY_KEY_BASE]))[self.KEY_KEY]
         
         self.secret_key = self.get_secret_key()
         self.api_key = self.get_api_key()
         
+        if(not (override is None)):
+            self.config_data[self.KEY_BASE]  = override[self.KEY_BASE]
+            self.config_data[self.KEY_ASSET] = override[self.KEY_ASSET]
+            self.config_data[self.KEY_TIME]  = override[self.KEY_TIME]
+            self.config_data[self.KEY_FILE]  = override[self.KEY_FILE]
+            self.config_data[self.KEY_STRA]  = [override[self.KEY_STRA]]
+            
         self.currency_amount = self.get_currency_amount()
         self.asset_price = self.get_asset_price()
         
@@ -74,12 +83,13 @@ class TraderControl:
         self.tb = TraderBinance(self.secret_key,self.api_key)
         
         self.strategies = []
-
-        
         
         self.isFileLoad = self.config_data[self.KEY_FILE_LOAD]
         self.isAppend = self.config_data[self.KEY_APPEND]
+        
+        
         self.file = self.config_data[self.KEY_FILE]
+     
         
         self.kline = []
         self.real_kline  = []
@@ -112,6 +122,9 @@ class TraderControl:
                                           0,0,0,0])
             self.loaded_kline = np.array(self.loaded_kline)
         '''
+    
+    def get_tickers(self):
+        return self.tb.get_tickers()
     
     def get_recent_candle(self,use_config=True,pair=""):
         if use_config == True:

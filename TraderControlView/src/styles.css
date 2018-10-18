@@ -1,4 +1,115 @@
 /* You can add global styles to this file, and also import other style files */
 
+
+
 html, body { height: 100%; }
-body { margin: 0; font-family: 'Roboto', sans-serif; }
+
+/* body { 
+    background: black; 
+    color: white; 
+    margin: 20px; 
+    text-align: center; 
+
+    font-family: 'Roboto', sans-serif;
+} */
+
+
+
+
+body { background: black !important; color: white; margin: 20px; text-align: center; }
+
+
+.highcharts-point-up {
+    fill: lime;
+    stroke: lime;
+}
+.highcharts-point-down {
+    fill: red;
+    stroke: red;
+}
+
+.highcharts-grid {
+    display: none;
+ }
+
+ /*
+    MATERIAL DARK THEME!
+ */
+ mat-form-field {
+     color:white;
+ }
+
+ .mat-form-field-label{
+    color:rgb(255, 217, 0) !important;
+} 
+
+.mat-form-field-underline {
+    background-color: white !important;
+}
+
+.mat-form-field-ripple {
+    background-color: orange !important;
+}
+
+.mat-select-arrow {
+    color:white;
+}
+
+.mat-form-field.mat-focused.mat-primary .mat-select-arrow {
+    color:orange;
+}
+
+.mat-select-value {
+    color:white;
+}
+
+
+.mat-option:focus:not(.mat-option-disabled), .mat-option:hover:not(.mat-option-disabled) {
+    color: black !important;
+    background: white !important;
+    border: solid black 2px !important;
+    
+}
+
+.mat-select-panel .mat-option.mat-selected:not(.mat-option-multiple){
+    color:orange !important;
+}
+
+.mat-table {
+    background: darkslategrey !important;
+    border-top: 1px solid white !important;
+    border-left: 1px solid white !important;
+    border-right: 1px solid white !important;
+}
+
+mat-footer-row, mat-header-row, mat-row, td.mat-cell, td.mat-footer-cell, th.mat-header-cell {
+    border-bottom-color: white !important;
+}
+
+td.mat-cell, td.mat-footer-cell, th.mat-header-cell {
+    color: white;
+}
+
+td.mat-cell:last-of-type, td.mat-footer-cell:last-of-type, th.mat-header-cell:last-of-type {
+    padding-right: 10px !important;
+}
+
+td.mat-cell:first-of-type, td.mat-footer-cell:first-of-type, th.mat-header-cell:first-of-type {
+    padding-left: 10px !important;
+}
+
+.mat-paginator {
+    background: darkslategrey !important;
+    border: white 1px solid !important;
+    color: white !important;
+    float: left !important;
+    border-top: 0px hidden black !important;
+}
+
+.mat-sort-header-arrow {
+    color:orange;
+}
+
+.mat-icon-button {
+    color:orange;
+}

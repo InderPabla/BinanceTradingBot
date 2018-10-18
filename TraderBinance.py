@@ -65,6 +65,9 @@ class TraderBinance:
         ticks = self.client.get_klines(symbol=pair, interval=time_frame)
         return np.array(self.array_string_to_float(ticks))
     
+    def get_tickers(self):
+        return self.client.get_ticker()
+    
     def get_current_server_time(self):
         server_time = self.client.get_server_time()
         #print(self.client.get_exchange_info())
