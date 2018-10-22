@@ -1,5 +1,25 @@
-
+/* 
 .custclass {
-    /* padding-right: 0.5em;
-    padding-left: 0.5em; */
+   display:inherit;
+} */
+
+.tradeBad {
+    color:red !important;
+}
+.tradeBad td{
+    color:red !important;
+}
+
+.tradeGood {
+    color:lime !important;
+}
+.tradeGood td{
+    color:lime !important;
+}
+
+.tradeNew {
+    color:white !important;
+}
+.tradeNew td{
+    color:white !important;
 }

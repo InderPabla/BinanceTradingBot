@@ -14,6 +14,7 @@ export interface EvaledDataItem {
   lowTotal:number;
   normal:number;
   normalTotal:number;
+  buyIndex:number;
 }
 
 /**

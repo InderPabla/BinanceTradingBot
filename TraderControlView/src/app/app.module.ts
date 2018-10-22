@@ -7,7 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonModule, MatCheckboxModule, MatInputModule, 
   MatCardModule, MatSelectModule, MatTableModule,
 MatPaginatorModule,MatSortModule,MatListModule,
-MatToolbarModule} from '@angular/material';
+MatToolbarModule, MatIconModule} from '@angular/material';
 import { HttpClientModule } from '@angular/common/http';
 
 //import {ChartAllModule,RangeNavigatorAllModule} from '@syncfusion/ej2-ng-charts';
@@ -19,6 +19,7 @@ import * as highcharts from 'Highcharts';
 import { HIGHCHARTS_MODULES } from 'angular-highcharts';
 import highstock from 'highcharts/modules/stock.src';
 import { EvaledDataComponent } from './evaled-data/evaled-data.component';
+import { DecimalFixPipe } from './decimal-fix.pipe';
 export function highchartsModules() {
   return [highstock];
 }
@@ -27,13 +28,14 @@ export function highchartsModules() {
   declarations: [
     AppComponent,
     TraderControlComponent,
-    EvaledDataComponent
+    EvaledDataComponent,
+    DecimalFixPipe
   ],
   imports: [
     BrowserModule, BrowserAnimationsModule, FormsModule,
 
     MatButtonModule, MatCheckboxModule, MatInputModule, MatCardModule, MatSelectModule, MatTableModule,
-    MatPaginatorModule,MatSortModule,MatListModule, MatToolbarModule,
+    MatPaginatorModule,MatSortModule,MatListModule, MatToolbarModule, MatIconModule,
     //ChartAllModule,RangeNavigatorAllModule,
 
     ChartModule,

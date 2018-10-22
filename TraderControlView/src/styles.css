@@ -76,7 +76,7 @@ body { background: black !important; color: white; margin: 20px; text-align: cen
 }
 
 .mat-table {
-    background: darkslategrey !important;
+    background: black !important;
     border-top: 1px solid white !important;
     border-left: 1px solid white !important;
     border-right: 1px solid white !important;
@@ -99,7 +99,7 @@ td.mat-cell:first-of-type, td.mat-footer-cell:first-of-type, th.mat-header-cell:
 }
 
 .mat-paginator {
-    background: darkslategrey !important;
+    background: black !important;
     border: white 1px solid !important;
     color: white !important;
     float: left !important;

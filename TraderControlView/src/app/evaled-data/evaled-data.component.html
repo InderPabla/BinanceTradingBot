@@ -4,54 +4,59 @@
 
     <ng-container matColumnDef="count">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Trade# </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.count}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.count}} </td>
     </ng-container>
 
     <ng-container matColumnDef="sellIndex">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Sell Index </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.sellIndex}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.sellIndex}} </td>
     </ng-container>
 
     <ng-container matColumnDef="buyLow">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Buy Price (Low) </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.buyLow}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.buyLow}} </td>
     </ng-container>
 
     <ng-container matColumnDef="sellLow">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Sell Price (Low) </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.sellLow}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.sellLow}} </td>
     </ng-container>
 
     <ng-container matColumnDef="amount">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Traded Amount </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.amount}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.amount | decx}} </td>
     </ng-container>
 
     <ng-container matColumnDef="low">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Low Profit </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.low}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.low | decx}} </td>
     </ng-container>
 
     <ng-container matColumnDef="lowTotal">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Low Total Profit </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.lowTotal}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.lowTotal | decx}} </td>
     </ng-container>
 
     <ng-container matColumnDef="normal">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Normal Profit </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.normal}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.normal | decx}} </td>
     </ng-container>
 
     <ng-container matColumnDef="normalTotal">
       <th mat-header-cell *matHeaderCellDef mat-sort-header class="custclass"> Normal Total Profit </th>
-      <td mat-cell *matCellDef="let element" class="custclass"> {{element.normalTotal}} </td>
+      <td mat-cell *matCellDef="let row" class="custclass"> {{row.normalTotal | decx}} </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns" class="custclass"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="custclass"></tr>
+    <tr (click)="onEvaluatedRowClick(row)" 
+        mat-row 
+        *matRowDef="let row; columns: displayedColumns;" 
+        
+        [ngClass]="{'tradeNew':row.sellIndex==-1, 'tradeBad':row.low<=0 && row.sellIndex!==-1,'tradeGood':row.low>0 && row.sellIndex!==-1}"></tr>
 
   </table>
   <mat-paginator #paginator [length]="dataSource.data.length" [pageIndex]="0" [pageSize]="5" [pageSizeOptions]="[5, 10, 25, 50]">
   </mat-paginator>
 
 </div>
+

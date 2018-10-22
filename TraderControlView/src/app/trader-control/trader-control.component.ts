@@ -1,6 +1,8 @@
+import { highstock } from 'highcharts/modules/stock.src';
+import { EvaledDataItem } from './../evaled-data/evaled-data-datasource';
 import { StrategyData } from './strategy-data/strategy-data';
 import { ControlData } from './control-data/control-data';
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ElementRef } from '@angular/core';
 import { BinanceTickers } from './ticker-data/binance-tickers';
 import { TraderControlService } from './trader-control.service';
 
@@ -33,7 +35,7 @@ export class TraderControlComponent implements OnInit {
 	
 	controlData:ControlData;
 
-	constructor(private _traderService: TraderControlService) { }
+	constructor(private _traderService: TraderControlService, private elementRef:ElementRef) { }
 
 	ngOnInit() {
 		this.controlData = new ControlData();
@@ -133,6 +135,7 @@ export class TraderControlComponent implements OnInit {
 		}
 		
 		console.log(this.highChartStockData[this.highChartStockData.length-250][0]);
+		
 		this.highChartObj = new StockChart({
 			xAxis: {
 				plotLines: plotLines,
@@ -186,8 +189,36 @@ export class TraderControlComponent implements OnInit {
 						var max = this.xAxis[0].max,
 						range = 72 * 3600 * 1000; // one day
 						this.xAxis[0].setExtremes(max - range, max);
-					}
+
+						// highcharts-plot-background
+						// this.elementRef.nativeElement.('my-element')
+                        //         .addEventListener('click', this.onClick.bind(this));
+						_this.elementRef.nativeElement.getElementsByClassName('highcharts-plot-background')[0]
+						.addEventListener("dragstart", function(event){
+							console.log("DRAG STARTED",event);
+						});
+
+						document.addEventListener("dragstart", function( event ) {
+							console.log("drag from document? ",event);
+						}, false);
 					  
+					},
+
+					click: function() {
+						console.log("click");
+					},
+
+					drilldown:function() {
+						console.log("drilldown");
+					},
+
+					drillup:function() {
+						console.log("drillup");
+					},
+					  
+					drillupall:function() {
+						console.log("drillupall");
+					}  
 						
 					  
 				}
@@ -356,4 +387,17 @@ export class TraderControlComponent implements OnInit {
 			this.controlData.chosenTickerAny = this.controlData.chosenTicker;
 	}
 
+	evaluatedRowCenter(row:EvaledDataItem) {
+		//console.log(row)
+		let sellIndex = row.sellIndex+1;
+		if(sellIndex>=this.highChartStockData.length || row.sellIndex===-1) sellIndex = this.highChartStockData.length-1;
+
+		let buyIndex = row.buyIndex-1;
+		if(buyIndex<0) buyIndex = 0;
+
+		this.highChartStockData[this.highChartStockData.length-250][0]
+		this.highChartObj.ref.xAxis[0].setExtremes(this.highChartStockData[buyIndex][0],this.highChartStockData[sellIndex][0])
+
+
+	}
 }

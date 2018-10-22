@@ -247,7 +247,11 @@ if __name__=="__main__":
             if(os.path.exists(filename)):
                 print("File from yesterday",filename,"exists.")
                 return jsonify({'status': "success"})
-
+            else:
+                 todayDate = datetime.today()
+                 todayDateFormatted = todayDate.strftime('%Y-%m-%d')
+                 filename = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
+            
             print(filename,"does not exists. Starting Download.")
             tc = TraderControl(config,None)
             utcdate = datetime.strptime(previousDateFormatted, '%Y-%m-%d').strftime ("%Y-%m-%d %H:%M:%S")

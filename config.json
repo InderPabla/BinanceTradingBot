@@ -16,7 +16,7 @@
 	"is_append":true,
 	"view":	{
 				"start":100000000,
-				"max":2000,
+				"max":1000,
 				"pad":0,
 				"strip":0,
 				"plot":"false",

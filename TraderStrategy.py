@@ -151,6 +151,7 @@ class TraderStrategy(object):
                 "normal":[],
                 "normalTotal":[],
                 "sellIndex":[],
+                "buyIndex":[],
                 "count":[],
                 
                 "buyLow":[],
@@ -177,6 +178,7 @@ class TraderStrategy(object):
                 sell_index = self.sell_index[i]
             
             buy_index = self.buy_index[i]
+            evaled["buyIndex"].append(buy_index)
             buy_normal_price = self.ops['close'][buy_index]
             buy_low_price = buy_normal_price+(max(abs(self.ops['high'][buy_index]-self.ops['close'][buy_index]),abs(self.ops['low'][buy_index]-self.ops['close'][buy_index]))*0.25)
             if(sell_index>-1 and sell_index<(len(ops["close"])-1)):
@@ -187,6 +189,7 @@ class TraderStrategy(object):
             
             if(sell_index>-1):
                 evaled["sellIndex"].append(int(self.sell_index[i]))
+                
                 evaled["count"].append(i+1)
 
                 sell_normal_price = self.ops['close'][sell_index]
@@ -198,14 +201,18 @@ class TraderStrategy(object):
 
                 profit_normal_new = ((sell_normal_price-buy_normal_price)*amount)*USD_CONVERT
                 profit_normal = profit_normal+profit_normal_new
-                evaled["normal"].append(round(profit_normal_new,2))
-                evaled["normalTotal"].append(round(profit_normal,2))
-       
+                #evaled["normal"].append(round(profit_normal_new,2))
+                #evaled["normalTotal"].append(round(profit_normal,2))
+                evaled["normal"].append(profit_normal_new)
+                evaled["normalTotal"].append(profit_normal)
+                
                 profit_low_new = ((sell_low_price-buy_low_price)*amount)*USD_CONVERT
                 profit_low = profit_low+profit_low_new
 
-                evaled["low"].append(round(profit_low_new,2))
-                evaled["lowTotal"].append(round(profit_low,2))
+                #evaled["low"].append(round(profit_low_new,2))
+                #evaled["lowTotal"].append(round(profit_low,2))
+                evaled["low"].append(profit_low_new)
+                evaled["lowTotal"].append(profit_low)
                 
                 evaled["buyLow"].append(buy_low_price)
                 evaled["buyNormal"].append(str(buy_normal_price))
@@ -234,13 +241,12 @@ class TraderStrategy(object):
                 evaled["colors"].append(Fore.CYAN) 
              
             if(amount>0.5):
-                #evaled["amount"].append('{:.2f}'.format(amount))
-                #evaled["amount"].append(str(amount)[0:10])
-                evaled["amount"].append(round(amount,2))
+
+                #evaled["amount"].append(round(amount,2))
+                evaled["amount"].append(amount)
             else:
-                evaled["amount"].append(round(amount,2))
-                #evaled["amount"].append(str(amount))
-                #evaled["amount"].append(str(amount)[0:10])
+                #evaled["amount"].append(round(amount,2))
+                evaled["amount"].append(amount)
                 
         
         evaled["buyLow"] = np.around(evaled["buyLow"],decimals=7)

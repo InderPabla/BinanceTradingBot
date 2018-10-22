@@ -2,7 +2,13 @@
     <mat-form-field *ngIf="controlData.topBinanceTickers" class = "matFormSpace">
         <mat-select [(ngModel)]="controlData.chosenTicker" [value]="controlData.chosenTicker" placeholder="Tickers">
             <ng-container *ngFor="let ticker of controlData.topBinanceTickers.tickers">
-                <mat-option  value="{{ticker.symbol}}" class="darkOption">{{ticker.symbol}}</mat-option>
+                <mat-option  value="{{ticker.symbol}}" class="darkOption">
+                        
+                        <span [ngClass]="{'tickerBad':ticker.priceChangePercent<=0,'tickerGood':ticker.priceChangePercent>0}"><span >{{ticker.symbol}}</span>  {{ticker.priceChangePercent}} </span>
+                  
+                </mat-option>
+
+
             </ng-container>
         </mat-select>
     </mat-form-field>
@@ -29,16 +35,20 @@
 </div>
 
 <div *ngIf="controlData"  class="col-12 controlLine">
-    <mat-form-field>
+    <mat-form-field class="matFormSpace">
         <input matInput placeholder="Chosen Ticker" [(ngModel)]="controlData.chosenTickerAny">
     </mat-form-field>
+    <button mat-button  (click)="controlData.sortTickersByVolume()"   class="matFormSpace"  style="background-color:white;color:black" >Volume Sort</button>
+    <button mat-button  (click)="controlData.sortTickersByChange()" class="matFormSpace" style="background-color:white;color:black" >Change Sort</button>
+    <button mat-button  (click)="controlData.sortTickersByVolumeChange()" class="matFormSpace" style="background-color:white;color:black" >Both Sort</button>
+    <button mat-button  (click)="controlData.sortTickerByCustom()"  style="background-color:white;color:black" >Custom Sort</button>
 </div>
 
 
 
 <div *ngIf="highChartObj" [chart]="highChartObj"></div>
 
-<app-evaled-data *ngIf="highChartObj && controlData && controlData.evaled && controlData.evaled.length>0" [evaled]=controlData.evaled></app-evaled-data>
+<app-evaled-data *ngIf="highChartObj && controlData && controlData.evaled && controlData.evaled.length>0" [evaled]=controlData.evaled [parent]=this></app-evaled-data>
 
 <!-- <div *ngIf="controlData && controlData.evaled && controlData.evaled.length>0"  class="col-12">
     <table mat-table [dataSource]="controlData.evaled">

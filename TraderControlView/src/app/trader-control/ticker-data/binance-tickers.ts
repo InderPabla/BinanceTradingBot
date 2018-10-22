@@ -11,8 +11,43 @@ export class BinanceTickers {
             })
         }
     }
+
     
-    sortFindTop(): void {
+    sortTickersByVolumeChange(): void {
+        this.tickers = this.tickers.sort((a:Ticker,b:Ticker):number => {
+            if(a.volume*a.prevClosePrice*a.priceChangePercent>b.volume*b.prevClosePrice*b.priceChangePercent)
+               return -1;
+           else if(a.volume*a.prevClosePrice*a.priceChangePercent<b.volume*b.prevClosePrice*b.priceChangePercent)
+               return 1; 
+           else 
+               return 0;  
+        })
+    }
+
+    sortTickersByChange(): void {
+        this.tickers = this.tickers.sort((a:Ticker,b:Ticker):number => {
+            if(a.priceChangePercent>b.priceChangePercent)
+               return -1;
+           else if(a.priceChangePercent<b.priceChangePercent)
+               return 1; 
+           else 
+               return 0;  
+        })
+    }
+
+    sortTickerByCustom(): void {
+        this.tickers = this.tickers.sort((a:Ticker,b:Ticker):number => {
+            if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent>b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent)
+               return -1;
+           else if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent<b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent)
+               return 1; 
+           else 
+               return 0;  
+        })
+    }
+
+    
+    sortTickersByVolume(): void {
         this.tickers = this.tickers.sort((a:Ticker,b:Ticker):number => {
              if(a.volume*a.prevClosePrice>b.volume*b.prevClosePrice)
                 return -1;

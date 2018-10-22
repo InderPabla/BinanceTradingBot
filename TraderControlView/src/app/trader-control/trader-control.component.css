@@ -24,3 +24,15 @@
 .custclass {
     padding-right: 1em;
 }
+
+.tickerSymbol {
+   margin-right:10px;
+}
+
+.tickerBad {
+    color:red;
+}
+
+.tickerGood {
+    color:lime;
+}
