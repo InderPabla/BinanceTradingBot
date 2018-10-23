@@ -164,6 +164,11 @@ if __name__=="__main__":
             tc = TraderControl(config,None)
             return json.dumps(tc.get_tickers())
         
+        @app.route('/server-time', methods=['GET'])
+        def get_server_time():
+            tc = TraderControl(config,None)
+            return json.dumps({'servertime':tc.tb.get_current_server_time()/1000})
+        
         @app.route('/init-strategy', methods=['POST'])
         @app.errorhandler(404)
         def get_init_strategy():

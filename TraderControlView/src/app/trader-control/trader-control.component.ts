@@ -27,81 +27,65 @@ export class TraderControlComponent implements OnInit {
 	]
 
 	highChartStockData: any[] = [];
-	highChartStockData2: any[] = [];
 	highChartStockDataColors: Highcharts.Color[] = [];
 	highChartObj: StockChart;
 	sma: any[] = [];
-	//binanceTickers:BinanceTickers;
-	
-	controlData:ControlData;
 
-	constructor(private _traderService: TraderControlService, private elementRef:ElementRef) { }
+	controlData: ControlData;
+
+	constructor(private _traderService: TraderControlService, private elementRef: ElementRef) { }
 
 	ngOnInit() {
 		this.controlData = new ControlData();
 
 		this._traderService.getConfig()
-		.then((result: any) => {
-			console.log("CONFIG",result);
-			//return this._traderService.getTestData()
+			.then((result: any) => {
+				console.log("CONFIG", result);
+				//return this._traderService.getTestData()
 
 
-			return this.getBinanceTickers()
-		})
-		// .then((result: any) => {
-		// 	// console.log("TEST DATA",result);
+				return this.getBinanceTickers()
+			})
+			.then((binanceTickers: BinanceTickers) => {
+				this.controlData.setBinanceTickers(binanceTickers);
+				console.log(this.controlData);
+				return this._traderService.getStrategies();
+			})
+			.then((strategyData: StrategyData) => {
+				this.controlData.setStrategies(strategyData);
+			})
+			.catch((err) => {
+				console.log(err);
+			})
 
-		// 	// this.buildStockDataWithArray(result["ops"]);
-		// 	// this.buildStockDataWithArray2(result["ops"]);
-		// 	// this.createHighCartObject(result["ops"],
-		// 	// 	result["sell_index"],
-		// 	// 	result["buy_index"],
-		// 	// 	result["evaled"]["low"]);
 
-		// 	return this.getBinanceTickers()
-		// })
-		.then((binanceTickers: BinanceTickers) => {
-			this.controlData.setBinanceTickers(binanceTickers);
-			console.log(this.controlData);
-			return this._traderService.getStrategies();
-		})
-		.then((strategyData:StrategyData) => {
-			this.controlData.setStrategies(strategyData);
-			// this.controlData.setBinanceTickers(binanceTickers);
-			// console.log(this.controlData);
-		})
-		.catch((err) => {
-			console.log(err);
-		})
-		
-		
 	}
 
 	getBinanceTickers(): Promise<any> {
-		return new Promise((resolve,reject)=> {
-			let futureTime = 1000*60*60//1000*60*60*12;
-			let localStoageTickers:any = localStorage.getItem('tickers');
+		return new Promise((resolve, reject) => {
+			let futureTime = 1000 * 60 * 60//1000*60*60*12;
+			let localStoageTickers: any = localStorage.getItem('tickers');
 			if (localStoageTickers) localStoageTickers = JSON.parse(localStoageTickers);
 
-			if(!localStoageTickers 
-			|| (new Date(localStoageTickers.dateCreated).getTime()+futureTime)<new Date().getTime() ){
+			if (!localStoageTickers
+				|| (new Date(localStoageTickers.dateCreated).getTime() + futureTime) < new Date().getTime()) {
 				this._traderService.getBinanceTickers()
-				.then((result)=> {
-					let newResult = {dateCreated:new Date(),tickers:result};
-					localStorage.removeItem('tickers')
-					localStorage.setItem('tickers',JSON.stringify(newResult));
-					console.log("DELETING OLD LOCALSTORAGE TICKER");
-					resolve(new BinanceTickers(result));
-				})
-				.catch((err) => { 
-					reject(err);
-				})
+					.then((result) => {
+						let newResult = { dateCreated: new Date(), tickers: result };
+						localStorage.removeItem('tickers')
+						localStorage.setItem('tickers', JSON.stringify(newResult));
+						console.log("DELETING OLD LOCALSTORAGE TICKER");
+						resolve(new BinanceTickers(result));
+					})
+					.catch((err) => {
+						reject(err);
+					})
 			}
-			else{
+			else {
 				console.log("RESOLVING OLD LOCALSTORAGE TICKER");
 				resolve(new BinanceTickers(localStoageTickers.tickers))
 			}
-			
+
 		})
 	}
 
@@ -110,7 +94,7 @@ export class TraderControlComponent implements OnInit {
 	//http://jsfiddle.net/highcharts/4x2az/3/
 	//https://github.com/highcharts/highcharts/issues/2348
 
-	createHighCartObject(realData, sell_index, buy_index, low): void {
+	createHighCartObject(realData: any, sell_index: number[], buy_index: number[], low: number[]): void {
 		let openTimeData: number[] = realData["openTime"];
 		let plotLines = [];
 		for (let i = 0; i < sell_index.length; i++) {
@@ -123,6 +107,7 @@ export class TraderControlComponent implements OnInit {
 			}
 			plotLines.push({ color: 'red', dashStyle: dashType, value: openTimeData[si], width: width });
 		}
+
 		for (let i = 0; i < buy_index.length; i++) {
 			let bi = buy_index[i]
 			let dashType = "ShortDash";
@@ -131,41 +116,26 @@ export class TraderControlComponent implements OnInit {
 				dashType = "Solid"
 				width = 2;
 			}
-			plotLines.push({ color: 'lime', dashStyle: dashType, value: openTimeData[bi], width: width });
+			if (buy_index.length > sell_index.length && i === buy_index.length - 1)
+				plotLines.push({ color: 'white', dashStyle: "Solid", value: openTimeData[bi], width: 2 });
+			else
+				plotLines.push({ color: 'lime', dashStyle: dashType, value: openTimeData[bi], width: width });
 		}
-		
-		console.log(this.highChartStockData[this.highChartStockData.length-250][0]);
-		
+
+		console.log(this.highChartStockData[this.highChartStockData.length - 250][0]);
+
 		this.highChartObj = new StockChart({
 			xAxis: {
 				plotLines: plotLines,
-				//min: this.highChartStockData[this.highChartStockData.length-250][0]
-				
 			},
-			// title: {text: "title"},
-			// plotOptions:{
-			//     series:{
-			//         dataGrouping:{
-			//             enabled:false
-			//         }
-			//     }
-			// },
 			rangeSelector: {
 				enabled: false,
 				selected: 1,
-				// buttons:[{
-				// 	type:"5m",
-				// 	text:"5m",
-				// 	dataGrouping:{
-				// 		enabled:false
-				// 	}
-				// }]
 			},
 			tooltip: {
 				valueDecimals: 9,
 
 			},
-			//colors:this.highChartStockDataColors,
 			chart: {
 
 				renderTo: "realtime-chart",
@@ -184,43 +154,39 @@ export class TraderControlComponent implements OnInit {
 					}
 				},
 				events: {
-					
-					load: function() {
+
+					load: function () {
 						var max = this.xAxis[0].max,
-						range = 72 * 3600 * 1000; // one day
+							range = 72 * 3600 * 1000; // one day
 						this.xAxis[0].setExtremes(max - range, max);
-
-						// highcharts-plot-background
-						// this.elementRef.nativeElement.('my-element')
-                        //         .addEventListener('click', this.onClick.bind(this));
 						_this.elementRef.nativeElement.getElementsByClassName('highcharts-plot-background')[0]
-						.addEventListener("dragstart", function(event){
-							console.log("DRAG STARTED",event);
-						});
+							.addEventListener("dragstart", function (event) {
+								console.log("DRAG STARTED", event);
+							});
 
-						document.addEventListener("dragstart", function( event ) {
-							console.log("drag from document? ",event);
+						document.addEventListener("dragstart", function (event) {
+							console.log("drag from document? ", event);
 						}, false);
-					  
+
 					},
 
-					click: function() {
+					click: function () {
 						console.log("click");
 					},
 
-					drilldown:function() {
+					drilldown: function () {
 						console.log("drilldown");
 					},
 
-					drillup:function() {
+					drillup: function () {
 						console.log("drillup");
 					},
-					  
-					drillupall:function() {
+
+					drillupall: function () {
 						console.log("drillupall");
-					}  
-						
-					  
+					}
+
+
 				}
 			},
 			series: [{
@@ -228,11 +194,6 @@ export class TraderControlComponent implements OnInit {
 				type: 'candlestick',
 				data: this.highChartStockData,
 			},
-			// {
-			// 	name: 'AAPL',
-			// 	type: 'candlestick',
-			// 	data: this.highChartStockData2,
-			// },
 			{
 				type: 'line',
 				name: 'SMA',
@@ -243,31 +204,31 @@ export class TraderControlComponent implements OnInit {
 			]
 		});
 
-		let _this:TraderControlComponent = this;
-		setTimeout(function(){
-			let other:any = _this.highChartObj;
+		let _this: TraderControlComponent = this;
+		setTimeout(function () {
+			let other: any = _this.highChartObj;
 			let max = _this.highChartObj.ref.xAxis[0].dataMax
-			let range = 48 * 3600 * 1000; 
+			let range = 48 * 3600 * 1000;
 			_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
 
-			setTimeout(function(){
-				let other:any = _this.highChartObj;
+			setTimeout(function () {
+				let other: any = _this.highChartObj;
 				let max = _this.highChartObj.ref.xAxis[0].dataMax
-				let range = 24 * 3600 * 1000; 
+				let range = 24 * 3600 * 1000;
 				_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
-				
-				setTimeout(function(){
-					let other:any = _this.highChartObj;
+
+				setTimeout(function () {
+					let other: any = _this.highChartObj;
 					let max = _this.highChartObj.ref.xAxis[0].dataMax
-					let range = 12 * 3600 * 1000; 
+					let range = 12 * 3600 * 1000;
 					_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
-		
-				},500);
 
-			},500);
+				}, 500);
+
+			}, 500);
 
 
-		},1500);
+		}, 1500);
 
 	}
 
@@ -298,7 +259,7 @@ export class TraderControlComponent implements OnInit {
 		let lowData: number[] = realData["low"];
 		let openTimeData: number[] = realData["openTime"];
 		let smaData = realData["30sma"];
-		
+
 
 
 		for (let i = 0; i < closeData.length; i++) {
@@ -310,94 +271,75 @@ export class TraderControlComponent implements OnInit {
 			let time: Date = new Date(openTimeData[i] / 1000);
 			this.highChartStockData.push([openTimeData[i], open, high, low, close]);
 			this.sma.push([openTimeData[i], sma])
-			// if(open>close){
-			// 	this.highChartStockDataColors.push(Highcharts.Color('lime'));
-			// }
-			// else 
-			// 	this.highChartStockDataColors.push(Highcharts.Color('red'));
 		}
-
-		//console.log(this.highChartStockData.length, " ", this.sma.length);
 	}
 
-	buildStockDataWithArray2(realData) {
-		this.highChartStockData2 = [];
-		let closeData: number[] = realData["closehks"];
-		let openData: number[] = realData["opnhks"];
-		let highData: number[] = realData["highhks"];
-		let lowData: number[] = realData["lowhks"];
-		let openTimeData: number[] = realData["openTime"];
-		let smaData = realData["30sma"];
+	runStrategy(): Promise<any> {
+		return new Promise((resolve, reject) => {
+			this._traderService.pullHistoricalTickerData(this.controlData)
+				.then((result) => {
+					console.log(result);
+					if (result && result.status === "success") {
+						return this._traderService.pullInitialStrategyData(this.controlData);
+					}
+					else {
+						throw "Error downloading historial data"
+					}
 
+				})
+				.then((result) => {
+					this.controlData.setEvaled(result["evaled"]);
+					this.highChartStockData = [];
+					this.highChartStockDataColors = [];
+					this.highChartObj;
+					this.sma = [];
 
-		for (let i = 0; i < closeData.length; i++) {
-			let open: number = openData[i];
-			let high: number = highData[i];
-			let close: number = closeData[i];
-			let low: number = lowData[i];
-			let sma: number = smaData[i];
-			let time: Date = new Date(openTimeData[i] / 1000);
-			this.highChartStockData2.push([openTimeData[i], open, high, low, close]);
-			
-			// if(open>close){
-			// 	this.highChartStockDataColors.push(Highcharts.Color('lime'));
-			// }
-			// else 
-			// 	this.highChartStockDataColors.push(Highcharts.Color('red'));
-		}
+					console.log(result["evaled"]);
+					this.buildStockDataWithArray(result["ops"]);
+					this.createHighCartObject(result["ops"],
+						result["sell_index"],
+						result["buy_index"],
+						result["evaled"]["low"]);
 
-		//console.log(this.highChartStockData2.length, " ", this.sma.length);
+					resolve({})
+				})
+				.catch((err) => {
+					console.log(err);
+					reject(err)
+				})
+		})
+
 	}
 
-	startStrategy(): void {
-		this._traderService.pullHistoricalTickerData(this.controlData)
-		.then((result)=> {
-			console.log(result);
-			if(result && result.status === "success") {
-				return this._traderService.pullInitialStrategyData(this.controlData);
-			}
-			else {
-				throw "Error downloading historial data"
-			}
-			
-		})
-		.then((result)=> {
-			this.controlData.setEvaled(result["evaled"]);
-			this.highChartStockData = [];
-			this.highChartStockData2= [];
-			this.highChartStockDataColors= [];
-			this.highChartObj;
-			this.sma = [];
+	strategyLoop(): void {
+		this.runStrategy()
+			.then((result) => {
+				return this._traderService.getServerTime()
 
-			console.log(result["evaled"]);
-			this.buildStockDataWithArray(result["ops"]);
-			this.buildStockDataWithArray2(result["ops"]);
-			this.createHighCartObject(result["ops"],
-				result["sell_index"],
-				result["buy_index"],
-				result["evaled"]["low"]);
-		})
-		.catch((err)=> {
-			console.log(err);
-		})
+			})
+			.then((serverTime: number) => {
+				console.log(serverTime);
+			})
+			.catch((err) => {
+				console.log(err);
+
+			})
 	}
+
 
 	chooseTicker() {
-		if(this.controlData)
+		if (this.controlData)
 			this.controlData.chosenTickerAny = this.controlData.chosenTicker;
 	}
 
-	evaluatedRowCenter(row:EvaledDataItem) {
-		//console.log(row)
-		let sellIndex = row.sellIndex+1;
-		if(sellIndex>=this.highChartStockData.length || row.sellIndex===-1) sellIndex = this.highChartStockData.length-1;
+	evaluatedRowCenter(row: EvaledDataItem) {
+		let sellIndex = row.sellIndex + 1;
+		if (sellIndex >= this.highChartStockData.length || row.sellIndex === -1) sellIndex = this.highChartStockData.length - 1;
 
-		let buyIndex = row.buyIndex-1;
-		if(buyIndex<0) buyIndex = 0;
+		let buyIndex = row.buyIndex - 1;
+		if (buyIndex < 0) buyIndex = 0;
 
-		this.highChartStockData[this.highChartStockData.length-250][0]
-		this.highChartObj.ref.xAxis[0].setExtremes(this.highChartStockData[buyIndex][0],this.highChartStockData[sellIndex][0])
-
-
+		this.highChartStockData[this.highChartStockData.length - 250][0]
+		this.highChartObj.ref.xAxis[0].setExtremes(this.highChartStockData[buyIndex][0], this.highChartStockData[sellIndex][0])
 	}
 }

@@ -116,6 +116,22 @@ export class TraderControlService {
 		})
 	}
 
+	public getServerTime():Promise<number> {
+		return new Promise((resolve, reject) => {
+			this.getRequet('/server-time',{}).subscribe(
+				data => {
+					resolve(data as number);
+				},
+				error => {
+					reject(error)
+				}
+			);
+
+		})
+	}
+
+	
+
 	private getRequet(api: string, param: any): Observable<any> {
 		return this.http.get("http://localhost:5000"+api, { params: param })
 	}
