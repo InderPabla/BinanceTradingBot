@@ -10,6 +10,8 @@ import { TraderControlService } from './trader-control.service';
 import { StockChart } from 'angular-highcharts';
 import * as Highcharts from 'highcharts';
 
+declare var Timer: any;
+
 @Component({
 	selector: 'app-trader-control',
 	templateUrl: './trader-control.component.html',
@@ -17,25 +19,16 @@ import * as Highcharts from 'highcharts';
 })
 export class TraderControlComponent implements OnInit {
 
-	stockData = [
-		{ x: new Date("2012-04-02"), open: 85.975716, high: 88.395714, low: 85.76857, close: 88.375717, volume: 14958790 },
-		{ x: new Date("2012-04-03"), open: 89.614288, high: 90.315712, low: 88.93, close: 89.902855, volume: 20863990 },
-		{ x: new Date("2012-04-04"), open: 89.192856, high: 89.408569, low: 88.14286, close: 89.187141, volume: 14324520 },
-		{ x: new Date("2012-04-05"), open: 89.568573, high: 90.665718, low: 89.057144, close: 90.525711, volume: 16032450 },
-		{ x: new Date("2012-04-09"), open: 89.447144, high: 91.405716, low: 89.328575, close: 90.889999, volume: 14938420 },
-		{ x: new Date("2012-04-10"), open: 91.418571, high: 92, low: 89.428574, close: 89.777145, volume: 22243130 },
-	]
 
-	highChartStockData: any[] = [];
-	highChartStockDataColors: Highcharts.Color[] = [];
 	highChartObj: StockChart;
 	sma: any[] = [];
-
 	controlData: ControlData;
 
 	constructor(private _traderService: TraderControlService, private elementRef: ElementRef) { }
 
 	ngOnInit() {
+
+
 		this.controlData = new ControlData();
 
 		this._traderService.getConfig()
@@ -122,7 +115,7 @@ export class TraderControlComponent implements OnInit {
 				plotLines.push({ color: 'lime', dashStyle: dashType, value: openTimeData[bi], width: width });
 		}
 
-		console.log(this.highChartStockData[this.highChartStockData.length - 250][0]);
+		//console.log(this.highChartStockData[this.highChartStockData.length - 250][0]);
 
 		this.highChartObj = new StockChart({
 			xAxis: {
@@ -192,7 +185,7 @@ export class TraderControlComponent implements OnInit {
 			series: [{
 				name: 'AAPL',
 				type: 'candlestick',
-				data: this.highChartStockData,
+				data: this.controlData.highChartStockData,
 			},
 			{
 				type: 'line',
@@ -232,35 +225,15 @@ export class TraderControlComponent implements OnInit {
 
 	}
 
-	buildStockDataWithKeys(realData) {
-		this.stockData = [];
+	buildStockDataWithArray(realData) {;
+		let highChartStockData:any[] = [];
 		let closeData: number[] = realData["close"];
 		let openData: number[] = realData["open"];
 		let highData: number[] = realData["high"];
 		let lowData: number[] = realData["low"];
 		let openTimeData: number[] = realData["openTime"];
-		for (let i = 0; i < closeData.length; i++) {
-			let open: number = openData[i];
-			let high: number = highData[i];
-			let close: number = closeData[i];
-			let low: number = lowData[i];
-			let time: Date = new Date(openTimeData[i] / 1000);
-			let newStockData = { x: time, open: open, high: high, low: low, close: close, volume: 0 };
-			this.stockData.push(newStockData);
-		}
-	}
-
-	buildStockDataWithArray(realData) {
-		this.highChartStockData = [];
-		this.highChartStockDataColors = [];
-		let closeData: number[] = realData["close"];
-		let openData: number[] = realData["open"];
-		let highData: number[] = realData["high"];
-		let lowData: number[] = realData["low"];
-		let openTimeData: number[] = realData["openTime"];
+		let closeTimeData: number[] = realData["closeTime"];
 		let smaData = realData["30sma"];
-
-
 
 		for (let i = 0; i < closeData.length; i++) {
 			let open: number = openData[i];
@@ -268,18 +241,21 @@ export class TraderControlComponent implements OnInit {
 			let close: number = closeData[i];
 			let low: number = lowData[i];
 			let sma: number = smaData[i];
-			let time: Date = new Date(openTimeData[i] / 1000);
-			this.highChartStockData.push([openTimeData[i], open, high, low, close]);
+			highChartStockData.push([openTimeData[i], open, high, low, close]);
 			this.sma.push([openTimeData[i], sma])
 		}
+
+		this.controlData.setCandleData(highChartStockData, openTimeData, closeTimeData);
 	}
 
-	runStrategy(): Promise<any> {
+	runStrategy(lastCloseTime?:number): Promise<any> {
 		return new Promise((resolve, reject) => {
-			this._traderService.pullHistoricalTickerData(this.controlData)
+			if(this.controlData.historialPulled === false) {
+				this._traderService.pullHistoricalTickerData(this.controlData)
 				.then((result) => {
 					console.log(result);
 					if (result && result.status === "success") {
+						this.controlData.setHistorialPulled(true)
 						return this._traderService.pullInitialStrategyData(this.controlData);
 					}
 					else {
@@ -288,13 +264,10 @@ export class TraderControlComponent implements OnInit {
 
 				})
 				.then((result) => {
-					this.controlData.setEvaled(result["evaled"]);
-					this.highChartStockData = [];
-					this.highChartStockDataColors = [];
 					this.highChartObj;
 					this.sma = [];
-
 					console.log(result["evaled"]);
+					this.controlData.setEvaled(result["evaled"]);
 					this.buildStockDataWithArray(result["ops"]);
 					this.createHighCartObject(result["ops"],
 						result["sell_index"],
@@ -304,27 +277,257 @@ export class TraderControlComponent implements OnInit {
 					resolve({})
 				})
 				.catch((err) => {
-					console.log(err);
 					reject(err)
 				})
+			}
+			else {
+				// this._traderService.pullInitialStrategyData(this.controlData)
+				// .then(result=> {
+				// 	resolve(result)
+				// })
+				// .catch((err) => {
+					
+				// 	reject(err)
+				// })
+
+
+				this._traderService.pullHistoricalTickerData(this.controlData)
+				.then((result) => {
+					console.log(result);
+					if (result && result.status === "success") {
+						this.controlData.setHistorialPulled(true)
+						return this._traderService.pullInitialStrategyData(this.controlData);
+					}
+					else {
+						throw "Error downloading historial data"
+					}
+
+				})
+				.then((result) => {
+					this.highChartObj;
+					this.sma = [];
+					console.log(result["evaled"]);
+					this.controlData.setEvaled(result["evaled"]);
+					this.buildStockDataWithArray(result["ops"]);
+					this.createHighCartObject(result["ops"],
+						result["sell_index"],
+						result["buy_index"],
+						result["evaled"]["low"]);
+
+					resolve({})
+				})
+				.catch((err) => {
+					reject(err)
+				})
+			}
+			
 		})
 
 	}
 
 	strategyLoop(): void {
-		this.runStrategy()
+		if(this.controlData.historialPulled) {
+			console.log("LAST CLOSE TIME IS",this.controlData.lastCloseTime);
+			console.log("CALLING TO PULL DATA");
+			this.runStrategy()
 			.then((result) => {
-				return this._traderService.getServerTime()
-
+				// return this._traderService.getServerTime()
+				this.awaitTick3();
 			})
-			.then((serverTime: number) => {
-				console.log(serverTime);
-			})
+			// .then((serverTime: number) => {
+			// 	this.awaitTick2(serverTime);
+			// })
 			.catch((err) => {
 				console.log(err);
-
 			})
+			// .then((result) => {
+			// 	console.log(result);
+			// })
+			// .catch((err)=> {
+			// 	console.log(err)
+			// })
+		}
+		else {
+			console.log("NO CLOSE TIME!!");
+			this.runStrategy()
+			.then((result) => {
+				//return this._traderService.getServerTime()
+				this.awaitTick3();
+			})
+			// .then((serverTime: number) => {
+			// 	this.awaitTick2(serverTime);
+			// })
+			.catch((err) => {
+				console.log(err);
+			})
+		}
+		
 	}
+
+
+	awaitTick3(closeTime?:number) {
+		let _thisc:TraderControlComponent = this;
+		
+		if(!closeTime) {
+			closeTime = this.controlData.getLastCandleCloseTime()/1000;
+			console.log("AWAIT TICK",closeTime);
+		}
+		else {
+			console.log("AWAIT TICK AGAIN",closeTime);
+		}
+		
+		this.controlData.setLastCloseTime(closeTime)
+		this.controlData.setLastBuyIndex();
+		this._traderService.getServerTime()
+		.then((serverTime: number) => {
+			serverTime= serverTime/1000.0;
+			let differenceTime:number = closeTime-serverTime;
+			console.log("DIFFERENCE TIME",differenceTime);
+			if(differenceTime>0) { 
+				var timerInstance = new Timer();
+				timerInstance.start({precision: 'secondTenths'});
+				this.controlData.startTimer();
+				timerInstance.addEventListener('secondTenthsUpdated', function (e) {
+					let t = timerInstance.getTimeValues();
+					let combined = (t.seconds)+(t.secondTenths/10.0)+(t.minutes*60)+(t.hours*3600)+(t.days*24*3600);
+					_thisc.controlData.setTimer(differenceTime-combined);
+
+					if(combined>=differenceTime){
+						timerInstance.stop();
+						_thisc.controlData.stopTimer();
+						console.log("STOPPING TIMER");
+						_thisc.strategyLoop()
+
+						// _this._traderService.getServerTime()
+						// .then((serverTime: number) => {
+						// 	serverTime= serverTime/1000.0;
+						// 	console.log("NEW TRUE DIFFEREINCE:",serverTime-closeTime);
+						// })
+						// .catch((err) => {
+						// 	console.log(err);
+						// })	
+
+					}
+					
+				});	
+			}
+			else {
+				console.log("DIFFERENCE IS NEGATIVE START LOOP AGAIN");
+				_thisc.strategyLoop()
+			}
+		})
+		.catch((err) => {
+			console.log(err);
+		})
+	}
+
+
+	// awaitTick2(closeTime?:number, combinedTotal?:number) {
+	// 	let _this = this;
+		
+		
+	// 	if(!closeTime)
+	// 		closeTime = this.controlData.getLastCandleCloseTime()/1000;
+	// 	else 
+	// 		console.log("Run AGAIN",closeTime,combinedTotal);
+	// 	if(!combinedTotal)
+	// 		combinedTotal = 0;
+
+		
+	// 	this._traderService.getServerTime()
+	// 	.then((serverTime: number) => {
+	// 		serverTime= serverTime/1000.0;
+	// 		let differenceTime:number = closeTime-serverTime;
+	// 		console.log("DIFFERENCE TIME",differenceTime);
+	// 		if(differenceTime>0) { 
+	// 			var timerInstance = new Timer();
+	// 			timerInstance.start({precision: 'secondTenths'});
+	// 			this.controlData.startTimer();
+	// 			timerInstance.addEventListener('secondTenthsUpdated', function (e) {
+	// 				let t = timerInstance.getTimeValues();
+	// 				let combined = (t.seconds)+(t.secondTenths/10.0)+(t.minutes*60)+(t.hours*3600)+(t.days*24*3600);
+	// 				_this.controlData.setTimer(differenceTime-(combined+combinedTotal));
+	// 				if(differenceTime>5){
+	// 					if(combined>=5){
+	// 						console.log("Calling Await Tick Again",closeTime,(combined+combinedTotal));
+	// 						timerInstance.stop();	
+	// 						_this.controlData.stopTimer();
+	// 						_this.awaitTick2(closeTime,combined+combinedTotal);
+	// 					}
+	// 				}
+	// 				else {
+	// 					if(combined>=differenceTime){
+	// 						timerInstance.stop();	
+	// 						_this.controlData.stopTimer();
+	// 						_this.controlData.setLastCloseTime(closeTime)
+	// 						_this.strategyLoop()
+
+	// 					}
+	// 				}
+
+
+	// 			});	
+	// 		}
+	// 		else {
+	// 			console.log("DIFFERENCE IS NEGATIVE START LOOP AGAIN");
+	// 			this.strategyLoop();
+	// 		}
+	// 	})
+	// 	.catch((err) => {
+	// 		console.log(err);
+	// 	})
+	// }
+
+
+	// awaitTick(serverTime:number) {
+	// 	let closeTime:number = this.controlData.getLastCandleCloseTime()/1000;
+	// 	serverTime = serverTime/1000;
+	// 	let differenceTime:number = closeTime-serverTime;
+	// 	let _this = this;
+	// 	let mineServerCheckTime = -1;
+	// 	console.log(serverTime,closeTime,differenceTime);
+
+	// 	if(differenceTime>0) {
+	// 		var timerInstance = new Timer();
+	// 		timerInstance.start({precision: 'secondTenths'});
+	// 		this.controlData.startTimer();
+	// 		timerInstance.addEventListener('secondTenthsUpdated', function (e) {
+	// 			let t = timerInstance.getTimeValues();
+	// 			let combined = (t.seconds)+(t.secondTenths/10.0)+(t.minutes*60)+(t.hours*3600)+(t.days*24*3600);
+
+	// 			if(combined>=differenceTime){
+	// 				timerInstance.stop();
+	// 				_this.controlData.stopTimer();
+	// 				_this.controlData.setLastCloseTime(closeTime)
+	// 				_this.strategyLoop()
+					
+	// 			}
+	// 			else {
+	// 				_this.controlData.setTimer(differenceTime-combined)
+	// 				if(mineServerCheckTime!=-1 && (differenceTime-combined)<=mineServerCheckTime) {
+	// 					mineServerCheckTime = -1;
+	// 					_this._traderService.getServerTime()
+	// 					.then((st: number) => {
+	// 						console.log("Before",differenceTime)
+	// 						differenceTime = closeTime-st
+	// 						console.log("After",differenceTime)
+	// 					})
+	// 					.catch((err) => {
+	// 						console.log(err);
+	// 					})
+	// 				}
+	// 				else if( (differenceTime-combined)>5+3){
+	// 					mineServerCheckTime = (differenceTime-combined)-5;
+	// 				}
+					
+	// 			}
+	// 		});
+	// 	}
+	// 	else {
+	// 		console.log("DIFFERENCE IS NEGATIVE START LOOP AGAIN");
+	// 		_this.strategyLoop();
+	// 	}
+	// }
 
 
 	chooseTicker() {
@@ -334,12 +537,9 @@ export class TraderControlComponent implements OnInit {
 
 	evaluatedRowCenter(row: EvaledDataItem) {
 		let sellIndex = row.sellIndex + 1;
-		if (sellIndex >= this.highChartStockData.length || row.sellIndex === -1) sellIndex = this.highChartStockData.length - 1;
-
+		if (sellIndex >= this.controlData.openTime.length || row.sellIndex === -1) sellIndex = this.controlData.openTime.length - 1;
 		let buyIndex = row.buyIndex - 1;
 		if (buyIndex < 0) buyIndex = 0;
-
-		this.highChartStockData[this.highChartStockData.length - 250][0]
-		this.highChartObj.ref.xAxis[0].setExtremes(this.highChartStockData[buyIndex][0], this.highChartStockData[sellIndex][0])
+		this.highChartObj.ref.xAxis[0].setExtremes(this.controlData.openTime[buyIndex], this.controlData.openTime[sellIndex]);
 	}
 }

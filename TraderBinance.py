@@ -1,5 +1,6 @@
 from binance.client import Client
 import numpy as np
+import time as sleeptime
 
 class TraderBinance:
     
@@ -60,10 +61,25 @@ class TraderBinance:
     def current_ticker(self,pair=""):
         self.client.get_ticker()
         
-    def get_candles(self,time="",pair=""):
+    def get_candles(self,time="",pair="",lastCloseTime=-1):
         time_frame = self.binance_time(time)
-        ticks = self.client.get_klines(symbol=pair, interval=time_frame)
-        return np.array(self.array_string_to_float(ticks))
+        ticks = np.array(self.array_string_to_float(self.client.get_klines(symbol=pair, interval=time_frame)))
+        if(lastCloseTime==-1):
+            print("Last Close Time RETURNING",lastCloseTime)
+            return ticks
+        else:
+            closeTime = lastCloseTime
+            openTime = ticks[len(ticks)-1][TraderBinance.TIME_INDEX]/1000
+            
+            print("Last Close Time",closeTime,"New Open Time",openTime)
+           
+            if(openTime>closeTime):
+                print("New Open After Previous Close")
+                return ticks
+            else:
+                print("Unable to get new data, reloading candles. Sleeping 1 second.")
+                sleeptime.sleep(1)
+                return self.get_candles(time=time,pair=pair,lastCloseTime=lastCloseTime)
     
     def get_tickers(self):
         return self.client.get_ticker()

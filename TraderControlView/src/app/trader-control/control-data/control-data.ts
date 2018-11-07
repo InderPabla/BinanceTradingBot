@@ -17,8 +17,27 @@ export class ControlData {
     chosenTickerAny:String;
 
     stratgies:StrategyData
-    evaled:any[] = [];
+    
     evaledColumns:string[] = ["count","sellIndex","buyLow","sellLow","amount","low","lowTotal","normal","normalTotal","buyIndex"];
+    
+
+    evaled:any[] = [];
+    highChartStockData: any[] = [];
+    openTime:number[] = [];
+    closeTime:number[] = [];
+
+    // prevEvaled:any[] = [];
+    // prevHighChartStockData: any[] = [];
+    // prevOpenTime:number[] = [];
+    // prevCoseTime:number[] = [];
+    // previousExists:boolean = false;
+    
+    isNextTickTimerStarted:boolean = false;
+    nextTickTimer:number = 0;
+    historialPulled:boolean = false;
+    lastCloseTime:number = undefined;
+    lastBuyIndex:number = undefined;
+
     constructor() {
 
     }
@@ -46,19 +65,21 @@ export class ControlData {
         this.chosenTicker = this.topBinanceTickers.tickers[0].symbol;
     }
 
-    sortTickerByCustom() {
+    sortTickerByCustom(): void {
         this.topBinanceTickers.sortTickerByCustom();
         this.chosenTicker = this.topBinanceTickers.tickers[0].symbol;
     }
 
-    setStrategies(stratgies:StrategyData) {
-        console.log(stratgies);
+    setStrategies(stratgies:StrategyData): void {
+        //console.log(stratgies);
         this.strategyList = stratgies.strategies;
         this.chosenStrategy = stratgies.default;
     }
 
-    setEvaled(evaled:any) {
+    setEvaled(evaled:any): void {
+        //this.prevEvaled = this.evaled;
         this.evaled = [];
+
         let size = evaled["amount"].length;
         for(let i =0;i<size;i++) {
             let evaledObj:any = {};
@@ -68,6 +89,48 @@ export class ControlData {
             }
             this.evaled.push(evaledObj )
         }
+    }
+
+    setCandleData(data:any[],openTime:number[],closeTime:number[]): void {
+        // this.prevHighChartStockData = this.highChartStockData;
+        // this.prevOpenTime = this.openTime;
+        // this.prevCoseTime =this.closeTime;
+
+        // if(!this.prevOpenTime) this.previousExists = false;
+        // else this.previousExists = true;
+
+        this.highChartStockData = data;
+        this.openTime = openTime;
+        this.closeTime= closeTime;
+    }
+
+    getLastCandleCloseTime():number {
+        return this.closeTime[this.closeTime.length-1]
+    }
+
+    setTimer(time:number){
+        this.nextTickTimer = time;
+    }
+
+    startTimer() {
+        this.isNextTickTimerStarted = true;
+    }
+
+    stopTimer(){
+        this.isNextTickTimerStarted = false;
+    }
+
+    setHistorialPulled(pulled:boolean){
+        this.historialPulled = pulled;
+    }
+
+    setLastCloseTime(closeTime:number) {
+        this.lastCloseTime = closeTime;
+    }
+
+    setLastBuyIndex() {
         
+        this.lastBuyIndex  = this.evaled[this.evaled.length-1].buyIndex;
+        console.log("Last Buy Index",this.lastBuyIndex);
     }
 }

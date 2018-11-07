@@ -50,78 +50,80 @@ class TraderControl:
     KEY_PLOT = 'plot'
     KEY_IS_PROFIT_PLOT = 'profitPlot'
     
-    def __init__(self,config,filePath,override=None):
+    def __init__(self,config,filePath,override=None,ignoreInit=False):
         
         self.className = "TraderControl"
         self.config = config
         self.filePath = filePath
         self.config_data = json.load(open(config))
-        
-       
-            
         self.config_data[self.KEY_KEY] = json.load(open(self.config_data[self.KEY_KEY_BASE]))[self.KEY_KEY]
-        
         self.secret_key = self.get_secret_key()
         self.api_key = self.get_api_key()
-        
-        if(not (override is None)):
-            self.config_data[self.KEY_BASE]  = override[self.KEY_BASE]
-            self.config_data[self.KEY_ASSET] = override[self.KEY_ASSET]
-            self.config_data[self.KEY_TIME]  = override[self.KEY_TIME]
-            self.config_data[self.KEY_FILE]  = override[self.KEY_FILE]
-            self.config_data[self.KEY_STRA]  = [override[self.KEY_STRA]]
-            
-        self.currency_amount = self.get_currency_amount()
-        self.asset_price = self.get_asset_price()
-        
-        self.asset_amount = self.currency_amount/self.asset_price
-        print(pin(Fore.YELLOW)+"=====>"+pin(Fore.RED)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount)+rst())
-        
-        self.pair = self.get_pair()
-        self.time = self.get_time_frame()
-        
         self.tb = TraderBinance(self.secret_key,self.api_key)
         
-        self.strategies = []
-        
-        self.isFileLoad = self.config_data[self.KEY_FILE_LOAD]
-        self.isAppend = self.config_data[self.KEY_APPEND]
-        
-        
-        self.file = self.config_data[self.KEY_FILE]
-     
-        
-        self.kline = []
-        self.real_kline  = []
-        
-        self.start_view = self.config_data[self.KEY_VIEW][self.KEY_START]
-        self.max_view = self.config_data[self.KEY_VIEW][self.KEY_MAX]
-        self.pad_view = self.config_data[self.KEY_VIEW][self.KEY_PAD]
-        
-        self.isPlot = self.config_data[self.KEY_VIEW][self.KEY_PLOT]=="true"
-        self.isProfitPlot = self.config_data[self.KEY_VIEW][self.KEY_IS_PROFIT_PLOT]=="true"
-        
-        self.server_time = 0
-        self.api_call_count = 0
-        self.max_api_call_count = 100
-        self.itteration_count = 0 
-        self.waitThread = None;
-
-        '''
-        if(not self.config==None):
-       
+        if(ignoreInit==False):    
+           
             
-        else:
-            self.loaded_kline = []
-            loaded_json = json.load(open(filePath))
-            for i in range(0,len(loaded_json)):
-                data = loaded_json[i]       
-                self.loaded_kline.append([data["date"],data["open"],data["high"],
-                                          data["low"],data["close"],data["volume"],
-                                          data["quoteVolume"],data["weightedAverage"],
-                                          0,0,0,0])
-            self.loaded_kline = np.array(self.loaded_kline)
-        '''
+            
+            
+            if(not (override is None)):
+                self.config_data[self.KEY_BASE]  = override[self.KEY_BASE]
+                self.config_data[self.KEY_ASSET] = override[self.KEY_ASSET]
+                self.config_data[self.KEY_TIME]  = override[self.KEY_TIME]
+                self.config_data[self.KEY_FILE]  = override[self.KEY_FILE]
+                self.config_data[self.KEY_STRA]  = [override[self.KEY_STRA]]
+             
+            self.currency_amount = self.get_currency_amount()
+            self.asset_price = self.get_asset_price()
+            
+            self.asset_amount = self.currency_amount/self.asset_price
+            print(pin(Fore.YELLOW)+"=====>"+pin(Fore.RED)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount),"Base:",self.config_data[self.KEY_BASE],"Asset",self.config_data[self.KEY_ASSET]+rst())
+            
+            self.pair = self.get_pair()
+            self.time = self.get_time_frame()
+            
+            
+            
+            self.strategies = []
+            
+            self.isFileLoad = self.config_data[self.KEY_FILE_LOAD]
+            self.isAppend = self.config_data[self.KEY_APPEND]
+            
+            
+            self.file = self.config_data[self.KEY_FILE]
+         
+            
+            self.kline = []
+            self.real_kline  = []
+            
+            self.start_view = self.config_data[self.KEY_VIEW][self.KEY_START]
+            self.max_view = self.config_data[self.KEY_VIEW][self.KEY_MAX]
+            self.pad_view = self.config_data[self.KEY_VIEW][self.KEY_PAD]
+            
+            self.isPlot = self.config_data[self.KEY_VIEW][self.KEY_PLOT]=="true"
+            self.isProfitPlot = self.config_data[self.KEY_VIEW][self.KEY_IS_PROFIT_PLOT]=="true"
+            
+            self.server_time = 0
+            self.api_call_count = 0
+            self.max_api_call_count = 100
+            self.itteration_count = 0 
+            self.waitThread = None;
+    
+            '''
+            if(not self.config==None):
+           
+                
+            else:
+                self.loaded_kline = []
+                loaded_json = json.load(open(filePath))
+                for i in range(0,len(loaded_json)):
+                    data = loaded_json[i]       
+                    self.loaded_kline.append([data["date"],data["open"],data["high"],
+                                              data["low"],data["close"],data["volume"],
+                                              data["quoteVolume"],data["weightedAverage"],
+                                              0,0,0,0])
+                self.loaded_kline = np.array(self.loaded_kline)
+            '''
     
     def get_tickers(self):
         return self.tb.get_tickers()
@@ -202,12 +204,14 @@ class TraderControl:
         sys.exit(0)
     
 
-    def test_run_strategy(self):
+    def test_run_strategy(self,lastCloseTime=-1,lastBuyIndex=-1):
         self.initilize_strategies()
-        self.get_kline_candles()
-        ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy(previous_buy_index=-1)
+        self.get_kline_candles(lastCloseTime=lastCloseTime)
+        if(lastBuyIndex>-1):
+            lastBuyIndex = lastBuyIndex - 1
+        ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy(previous_buy_index=lastBuyIndex)
         return ops,buy_index,sell_index,evaled
-        #return -1
+        
         
     def run_strategies(self,previous_buy_index=-1):
         '''
@@ -309,15 +313,15 @@ class TraderControl:
     def loadFromFile(self,fileName):
         return np.load(fileName)    
     
-    def get_kline_candles(self,use_config=True,pair="",time=""):
+    def get_kline_candles(self,use_config=True,pair="",time="",lastCloseTime=-1):
         self.kline = []
         if(self.isFileLoad==False):
             if use_config == True:
                 pair = self.pair
                 time = self.time
-                self.kline = self.tb.get_candles(pair=self.pair,time=self.time)
+                self.kline = self.tb.get_candles(pair=self.pair,time=self.time,lastCloseTime=lastCloseTime)
             else:
-                self.kline = self.tb.get_candles(pair=pair,time=time)
+                self.kline = self.tb.get_candles(pair=pair,time=time,lastCloseTime=lastCloseTime)
         else:
             self.kline = np.load(self.file)
  
@@ -325,12 +329,12 @@ class TraderControl:
             if use_config == True:
                 pair = self.pair
                 time = self.time
-                self.real_kline = self.tb.get_candles(pair=self.pair,time=self.time)
+                self.real_kline = self.tb.get_candles(pair=self.pair,time=self.time,lastCloseTime=lastCloseTime)
             else:
-                self.real_kline = self.tb.get_candles(pair=pair,time=time)
+                self.real_kline = self.tb.get_candles(pair=pair,time=time,lastCloseTime=lastCloseTime)
                 
         return self.kline
-        
+            
     def get_secret_key(self):
         return self.config_data[self.KEY_KEY][self.KEY_SEC]
     
@@ -338,7 +342,10 @@ class TraderControl:
         return self.config_data[self.KEY_KEY][self.KEY_API]
     
     def get_asset_price(self):
-        response =req.get("https://min-api.cryptocompare.com/data/price?fsym="+self.get_symbol_asset()+"&tsyms="+self.get_symbol_currency())
+        query = "https://min-api.cryptocompare.com/data/price?fsym="+self.get_symbol_asset()+"&tsyms="+self.get_symbol_currency()
+        print(query)
+        response =req.get(query)
+        
         return json.loads(response.text)[self.get_symbol_currency()]
             
     def get_symbol_asset(self):

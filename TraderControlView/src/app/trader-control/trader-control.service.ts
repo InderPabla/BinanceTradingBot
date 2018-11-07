@@ -86,6 +86,7 @@ export class TraderControlService {
 
 	public pullHistoricalTickerData(controlData:ControlData):Promise<any> {
 		return new Promise((resolve, reject) => {
+			
 			let historialQuery = {time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
 			console.log(historialQuery);
 			this.postRequest('/historical', historialQuery).subscribe(
@@ -102,7 +103,11 @@ export class TraderControlService {
 
 	public pullInitialStrategyData(controlData:ControlData):Promise<any> {
 		return new Promise((resolve, reject) => {
-			let historialQuery = {time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
+			let lastCloseTime:number = undefined;
+			let lastBuyIndex:number = undefined;
+			if(controlData.historialPulled) lastCloseTime = controlData.lastCloseTime;
+			if(controlData.lastBuyIndex) lastBuyIndex = controlData.lastBuyIndex;
+			let historialQuery = {lastBuyIndex:lastBuyIndex,lastCloseTime:lastCloseTime,time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
 			console.log(historialQuery);
 			this.postRequest('/init-strategy', historialQuery).subscribe(
 				data => {
@@ -120,7 +125,7 @@ export class TraderControlService {
 		return new Promise((resolve, reject) => {
 			this.getRequet('/server-time',{}).subscribe(
 				data => {
-					resolve(data as number);
+					resolve(data.servertime as number);
 				},
 				error => {
 					reject(error)

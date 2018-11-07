@@ -1,8 +1,8 @@
 {
     "key_base":"D:/InderTheGreat/Documents/bcred.json",
            
-    "base":"MDA",
-    "asset":"ETH",
+    "base":"",
+    "asset":"",
     
     "currency":"USD",
     "amount":250,

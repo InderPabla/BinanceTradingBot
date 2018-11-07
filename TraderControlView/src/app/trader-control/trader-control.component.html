@@ -42,6 +42,7 @@
     <button mat-button  (click)="controlData.sortTickersByChange()" class="matFormSpace" style="background-color:white;color:black" >Change Sort</button>
     <button mat-button  (click)="controlData.sortTickersByVolumeChange()" class="matFormSpace" style="background-color:white;color:black" >Both Sort</button>
     <button mat-button  (click)="controlData.sortTickerByCustom()"  style="background-color:white;color:black" >Custom Sort</button>
+    <h1 *ngIf="controlData.isNextTickTimerStarted" class="timer">Next Open: <span [ngClass]="{'high':controlData.nextTickTimer<=30 && controlData.nextTickTimer>10,'low':controlData.nextTickTimer<=10}">{{controlData.nextTickTimer.toFixed(2)}}(s)</span></h1>
 </div>
 
 

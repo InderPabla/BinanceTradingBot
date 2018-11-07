@@ -30,7 +30,9 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/tachyons/css/tachyons.min.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/easytimer.js/dist/easytimer.min.js"
+            ]
           },
           "configurations": {
             "production": {

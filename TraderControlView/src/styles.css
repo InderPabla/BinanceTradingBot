@@ -113,3 +113,25 @@ td.mat-cell:first-of-type, td.mat-footer-cell:first-of-type, th.mat-header-cell:
 .mat-icon-button {
     color:orange;
 }
+
+.timer {
+    position: relative;
+    color:white;
+    display:inline;
+    margin-left:10px;
+    font-weight:200;
+    font-size:20px;
+    top:3px;
+}
+
+.timer > span.high {
+    color:orange;
+}
+
+.timer > span.low {
+    color:red;
+    font-weight: bold;
+}
+
+
+

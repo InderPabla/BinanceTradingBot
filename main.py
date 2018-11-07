@@ -161,13 +161,13 @@ if __name__=="__main__":
     
         @app.route('/tickers', methods=['GET'])
         def get_tickers():
-            tc = TraderControl(config,None)
+            tc = TraderControl(config,None,ignoreInit=True)
             return json.dumps(tc.get_tickers())
         
         @app.route('/server-time', methods=['GET'])
         def get_server_time():
-            tc = TraderControl(config,None)
-            return json.dumps({'servertime':tc.tb.get_current_server_time()/1000})
+            tc = TraderControl(config,None,ignoreInit=True)
+            return json.dumps({'servertime':tc.tb.get_current_server_time()})
         
         @app.route('/init-strategy', methods=['POST'])
         @app.errorhandler(404)
@@ -177,6 +177,14 @@ if __name__=="__main__":
             time = data["time"]
             pair = data["ticker"]
             strategy = data["strategy"]
+            lastCloseTime=-1
+            lastBuyIndex=-1
+            if ("lastCloseTime" in data):
+                lastCloseTime = data["lastCloseTime"]
+            
+            if ("lastBuyIndex" in data):
+                lastBuyIndex = data["lastBuyIndex"]
+                
             todayDate = datetime.today()
             todayDateFormatted = todayDate.strftime('%Y-%m-%d')
             file = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
@@ -214,7 +222,7 @@ if __name__=="__main__":
             
             tc = TraderControl(config,None,override=override)
  
-            ops,buy_index,sell_index,evaled = tc.test_run_strategy() 
+            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex) 
             complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
 
 
@@ -258,7 +266,7 @@ if __name__=="__main__":
                  filename = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
             
             print(filename,"does not exists. Starting Download.")
-            tc = TraderControl(config,None)
+            tc = TraderControl(config,None,ignoreInit=True)
             utcdate = datetime.strptime(previousDateFormatted, '%Y-%m-%d').strftime ("%Y-%m-%d %H:%M:%S")
             ticks = tc.historical(time,pair,utcdate)
             print("Download for",pair,"-",time,"-",previousDateFormatted,"-",todayDateFormatted,"completed. Saving...")

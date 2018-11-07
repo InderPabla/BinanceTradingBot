@@ -87,7 +87,7 @@ export class BinanceTickers {
 
     createBinanceTickersWithTop(amount:number): BinanceTickers {
         let binanceTickers:BinanceTickers = new BinanceTickers(undefined);
-        binanceTickers.setTickers(this.tickers.slice(0,amount));
+        binanceTickers.setTickers(this.tickers.slice(0,this.tickers.length>=amount?amount:this.tickers.length));
         return binanceTickers;
     }
 
