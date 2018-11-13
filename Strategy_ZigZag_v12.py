@@ -18,16 +18,30 @@ class Strategy (TraderStrategy):
         self.run = True
         self.visual_sell = False
         self.visual_buy = False
+        
         self.previous_buy_index =-1
+        
+        self.opBuyIndices = []
+        self.opSellIndices = []
+        self.opLastBuyIndex = -1
+        self.opLastIndexBeforeOperation = -1
+        self.opIndex = 0
         #self.trueBTCPriceKline = self.tc.loadFromFile('Historical/BTCUSDT_1h_Binance_Numpy_Aug_7.txt.npy')
-        
+         
     '''
     ###########################################################################
     ###########################################################################
     '''
         
-    def run_strategy(self,previous_buy_index=-1):
+    def run_strategy(self,previous_buy_index=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1):
         self.previous_buy_index = previous_buy_index
+  
+        self.opBuyIndices = opBuyIndices
+        self.opSellIndices = opSellIndices
+        self.opLastBuyIndex = opLastBuyIndex
+        self.opLastIndexBeforeOperation = opLastIndexBeforeOperation
+        self.opIndex = 0
+        
         ops = {}
         
         hk_count = 1
@@ -393,6 +407,7 @@ class Strategy (TraderStrategy):
         self.buyCount = 0
         self.cool_down = 5
         self.cool_down_count = 0
+        
     
     '''
     ###########################################################################
@@ -400,7 +415,33 @@ class Strategy (TraderStrategy):
     '''
     
     def buy(self,ops,index):
+        if(index>self.opLastIndexBeforeOperation or self.opLastIndexBeforeOperation==-1 or self.opLastBuyIndex == -1 or len(self.opBuyIndices)==0):
+            stamp = datetime.fromtimestamp(ops['closetime'][index]/1000)
+            weekday = stamp.weekday()
+            if(weekday>=7):
+                return False
+    
+            
+            if(self.cool_down_count>0):
+                self.cool_down_count = self.cool_down_count-1
+                return False
+            
+            if ( ops["trendbaremaconv"][index]>ops["trendbaremaconv"][index-1]  
+            and ops["kamaeam1"][index]>ops["kamaeam1"][index-1]):
+                 return True
+        else:
+            
+            
+            '''
+            if(self.previous_buy_index==index):
+                return True
+            '''
+            return False
         
+        
+        
+        
+        '''
         stamp = datetime.fromtimestamp(ops['closetime'][index]/1000)
         weekday = stamp.weekday()
         if(weekday>=7):
@@ -411,8 +452,19 @@ class Strategy (TraderStrategy):
             self.cool_down_count = self.cool_down_count-1
             return False
         
+        if ( ops["trendbaremaconv"][index]>ops["trendbaremaconv"][index-1]  
+        and ops["kamaeam1"][index]>ops["kamaeam1"][index-1]):
+             return True
         
-            
+        
+        if(self.previous_buy_index==index):
+            return True
+        
+        return False
+        '''
+        
+        
+        
         
         '''
         if(ops["highhks"][index]>ops["highhks"][index-1] and ops["diffhks2"][index]>ops["diffhks2"][index-1]):
@@ -494,14 +546,7 @@ class Strategy (TraderStrategy):
         '''
         
         
-        if ( ops["trendbaremaconv"][index]>ops["trendbaremaconv"][index-1]  
-        and ops["kamaeam1"][index]>ops["kamaeam1"][index-1]):
-             return True
         
-        if(self.previous_buy_index==index):
-            return True
-        
-        return False
     
     '''
     ###########################################################################

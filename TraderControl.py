@@ -204,7 +204,12 @@ class TraderControl:
         sys.exit(0)
     
 
-    def test_run_strategy(self,lastCloseTime=-1,lastBuyIndex=-1):
+    def test_run_strategy(self,lastCloseTime=-1,lastBuyIndex=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1):
+        print("-------------TEST RUN PARAMS------------")
+        print("lastCloseTime",lastCloseTime,"lastBuyIndex",lastBuyIndex,"opLastBuyIndex",opLastBuyIndex,"opLastIndexBeforeOperation",opLastIndexBeforeOperation)
+        print("opBuyIndices",opBuyIndices)
+        print("opSellIndices",opSellIndices)
+        print("----------------------------------------")
         self.initilize_strategies()
         self.get_kline_candles(lastCloseTime=lastCloseTime)
         if(lastBuyIndex>-1):

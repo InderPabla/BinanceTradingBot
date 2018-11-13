@@ -179,11 +179,27 @@ if __name__=="__main__":
             strategy = data["strategy"]
             lastCloseTime=-1
             lastBuyIndex=-1
+            
+            opBuyIndices = []
+            opSellIndices = []
+            opLastBuyIndex = -1
+            opLastIndexBeforeOperation = -1
+            
             if ("lastCloseTime" in data):
                 lastCloseTime = data["lastCloseTime"]
             
             if ("lastBuyIndex" in data):
                 lastBuyIndex = data["lastBuyIndex"]
+                
+            if ("forceState" in data):
+                if ("buyIndex" in data['forceState']):
+                    opBuyIndices = data['forceState']["buyIndex"]
+                if ("sellIndex" in data['forceState']):
+                    opSellIndices = data['forceState']["sellIndex"]
+                if ("lastBuyIndex" in data['forceState']):
+                    opLastBuyIndex = data['forceState']["lastBuyIndex"]
+                if ("lastBuyIndex" in data['forceState']):
+                    opLastIndexBeforeOperation = data['forceState']["lastIndexBeforeOperation"]
                 
             todayDate = datetime.today()
             todayDateFormatted = todayDate.strftime('%Y-%m-%d')
@@ -222,7 +238,7 @@ if __name__=="__main__":
             
             tc = TraderControl(config,None,override=override)
  
-            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex) 
+            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex,opBuyIndices=opBuyIndices,opSellIndices=opSellIndices,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation) 
             complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
 
 

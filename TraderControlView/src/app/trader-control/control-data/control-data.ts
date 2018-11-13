@@ -15,7 +15,7 @@ export class ControlData {
 
     chosenTicker:String;
     chosenTickerAny:String;
-
+    
     stratgies:StrategyData
     
     evaledColumns:string[] = ["count","sellIndex","buyLow","sellLow","amount","low","lowTotal","normal","normalTotal","buyIndex"];
@@ -37,6 +37,8 @@ export class ControlData {
     historialPulled:boolean = false;
     lastCloseTime:number = undefined;
     lastBuyIndex:number = undefined;
+
+    extreme:any;
 
     constructor() {
 
@@ -91,6 +93,42 @@ export class ControlData {
         }
     }
 
+    getNextTickBuyAndSellIndex() {
+        let buyIndex = [];
+        let sellIndex = [];
+        let lastBuyIndex = undefined;
+        let lastIndexBeforeOperation = undefined;
+        
+        for(let ev of this.evaled) {
+            if(ev.buyIndex===-1) buyIndex.push(ev.buyIndex);
+            else buyIndex.push(ev.buyIndex-1);
+
+            if(ev.sellIndex===-1) sellIndex.push(ev.sellIndex);
+            else sellIndex.push(ev.sellIndex-1);
+        }
+
+        for(let i = buyIndex.length-1; i>=0; i--) {
+            if(i< buyIndex.length-1 && buyIndex[i]===-1) {
+                let index = i;
+                buyIndex.splice(index,1);
+                sellIndex.splice(index,1);
+            }
+
+            else if(i == buyIndex.length-1 ) {
+                lastBuyIndex = buyIndex[i];
+
+                if(sellIndex[i]===-1) {
+                    lastIndexBeforeOperation = buyIndex[i];
+                }
+                else {
+                    lastIndexBeforeOperation = sellIndex[i];
+                }
+            }
+        }
+
+        return {buyIndex:buyIndex,sellIndex:sellIndex,lastBuyIndex:lastBuyIndex,lastIndexBeforeOperation:lastIndexBeforeOperation};
+    }
+
     setCandleData(data:any[],openTime:number[],closeTime:number[]): void {
         // this.prevHighChartStockData = this.highChartStockData;
         // this.prevOpenTime = this.openTime;
@@ -132,5 +170,14 @@ export class ControlData {
         
         this.lastBuyIndex  = this.evaled[this.evaled.length-1].buyIndex;
         console.log("Last Buy Index",this.lastBuyIndex);
+    }
+
+    applyNewState() {
+        
+    }
+
+   
+    setExtreme(extreme) {
+        this.extreme = extreme;
     }
 }

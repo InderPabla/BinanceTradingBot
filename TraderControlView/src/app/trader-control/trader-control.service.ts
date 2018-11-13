@@ -104,10 +104,17 @@ export class TraderControlService {
 	public pullInitialStrategyData(controlData:ControlData):Promise<any> {
 		return new Promise((resolve, reject) => {
 			let lastCloseTime:number = undefined;
+
 			let lastBuyIndex:number = undefined;
+			let forceState:any = undefined;
 			if(controlData.historialPulled) lastCloseTime = controlData.lastCloseTime;
-			if(controlData.lastBuyIndex) lastBuyIndex = controlData.lastBuyIndex;
-			let historialQuery = {lastBuyIndex:lastBuyIndex,lastCloseTime:lastCloseTime,time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
+			if(controlData.lastBuyIndex) {
+				lastBuyIndex = controlData.lastBuyIndex;
+				forceState = controlData.getNextTickBuyAndSellIndex();
+			}
+			
+
+			let historialQuery = {forceState:forceState,lastBuyIndex:lastBuyIndex,lastCloseTime:lastCloseTime,time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
 			console.log(historialQuery);
 			this.postRequest('/init-strategy', historialQuery).subscribe(
 				data => {
