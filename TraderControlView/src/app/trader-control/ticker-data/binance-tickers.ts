@@ -37,9 +37,9 @@ export class BinanceTickers {
 
     sortTickerByCustom(): void {
         this.tickers = this.tickers.sort((a:Ticker,b:Ticker):number => {
-            if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent>b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent)
+            if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent*Math.sign(a.priceChangePercent)>b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent*Math.sign(b.priceChangePercent))
                return -1;
-           else if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent<b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent)
+           else if(a.volume*a.prevClosePrice*a.priceChangePercent*a.priceChangePercent*Math.sign(a.priceChangePercent)<b.volume*b.prevClosePrice*b.priceChangePercent*b.priceChangePercent*Math.sign(b.priceChangePercent))
                return 1; 
            else 
                return 0;  

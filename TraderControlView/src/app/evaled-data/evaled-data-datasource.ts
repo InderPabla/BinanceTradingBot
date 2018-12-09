@@ -79,10 +79,10 @@ export class EvaledDataDataSource extends DataSource<EvaledDataItem> {
     return data.sort((a, b) => {
       const isAsc = this.sort.direction === 'asc';
       switch (this.sort.active) {
-
+        case 'count': return compare(a.count, b.count, isAsc); 
          case 'amount': return compare(a.amount, b.amount, isAsc);
          case 'buyLow': return compare(a.buyLow, b.buyLow, isAsc);
-         case 'count': return compare(a.count, b.count, isAsc);
+         
          case 'low': return compare(a.low, b.low, isAsc);
          case 'lowTotal': return compare(a.lowTotal, b.lowTotal, isAsc);
          case 'normal': return compare(a.normal, b.normal, isAsc);

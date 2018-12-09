@@ -15,7 +15,9 @@ export class ControlData {
 
     chosenTicker:String;
     chosenTickerAny:String;
-    
+    chosenTickerAnyAsset:String;
+    chosenTickerAnyBase:String;
+
     stratgies:StrategyData
     
     evaledColumns:string[] = ["count","sellIndex","buyLow","sellLow","amount","low","lowTotal","normal","normalTotal","buyIndex"];
@@ -39,6 +41,8 @@ export class ControlData {
     lastBuyIndex:number = undefined;
 
     extreme:any;
+
+
 
     constructor() {
 
@@ -99,12 +103,14 @@ export class ControlData {
         let lastBuyIndex = undefined;
         let lastIndexBeforeOperation = undefined;
         
+        let minusFactor = 0; //-1;
+
         for(let ev of this.evaled) {
             if(ev.buyIndex===-1) buyIndex.push(ev.buyIndex);
-            else buyIndex.push(ev.buyIndex-1);
+            else buyIndex.push(ev.buyIndex-minusFactor);
 
             if(ev.sellIndex===-1) sellIndex.push(ev.sellIndex);
-            else sellIndex.push(ev.sellIndex-1);
+            else sellIndex.push(ev.sellIndex-minusFactor);
         }
 
         for(let i = buyIndex.length-1; i>=0; i--) {
@@ -118,14 +124,27 @@ export class ControlData {
                 lastBuyIndex = buyIndex[i];
 
                 if(sellIndex[i]===-1) {
-                    lastIndexBeforeOperation = buyIndex[i];
+                    lastIndexBeforeOperation = this.openTime.length-2;//buyIndex[i];
+                    //lastIndexBeforeOperation= this.openTime.length-3;
+                    //lastIndexBeforeOperation = lastBuyIndex;
+
+
+                    lastIndexBeforeOperation = this.openTime.length-2;
                 }
                 else {
                     lastIndexBeforeOperation = sellIndex[i];
+                    //lastIndexBeforeOperation= this.openTime.length-3;
+                    //lastIndexBeforeOperation= sellIndex[i];
+
+                    lastIndexBeforeOperation = this.openTime.length-2;
                 }
             }
         }
 
+        console.log(lastIndexBeforeOperation,this.openTime.length,(this.openTime.length-lastIndexBeforeOperation))
+
+        //return {buyIndex:[],sellIndex:[],lastBuyIndex:undefined,lastIndexBeforeOperation:undefined};
+        
         return {buyIndex:buyIndex,sellIndex:sellIndex,lastBuyIndex:lastBuyIndex,lastIndexBeforeOperation:lastIndexBeforeOperation};
     }
 
@@ -167,9 +186,13 @@ export class ControlData {
     }
 
     setLastBuyIndex() {
-        
-        this.lastBuyIndex  = this.evaled[this.evaled.length-1].buyIndex;
-        console.log("Last Buy Index",this.lastBuyIndex);
+        //console.log("==========SETTING LAST BUY INDEX=========")
+        //console.log(this.evaled)
+        if(this.evaled.length>0)
+            this.lastBuyIndex  = this.evaled[this.evaled.length-1].buyIndex;
+        else
+            this.lastBuyIndex = -1
+        //console.log("Last Buy Index",this.lastBuyIndex);
     }
 
     applyNewState() {
@@ -179,5 +202,27 @@ export class ControlData {
    
     setExtreme(extreme) {
         this.extreme = extreme;
+    }
+
+    setTickerParts() {
+        if(this.chosenTickerAny.endsWith("BNB")) {
+            this.chosenTickerAnyAsset = "BNB"
+            this.chosenTickerAnyBase = this.chosenTickerAny.substring(0,this.chosenTickerAny.length-3)
+        }
+            
+        else if(this.chosenTickerAny.endsWith("BTC")) {
+            this.chosenTickerAnyAsset = "BTC"
+            this.chosenTickerAnyBase = this.chosenTickerAny.substring(0,this.chosenTickerAny.length-3)   
+        }
+           
+        else if(this.chosenTickerAny.endsWith("ETH")) {
+            this.chosenTickerAnyAsset = "ETH"
+            this.chosenTickerAnyBase = this.chosenTickerAny.substring(0,this.chosenTickerAny.length-3)
+        }
+           
+        else if(this.chosenTickerAny.endsWith("USDT")){
+            this.chosenTickerAnyAsset = "USDT"     
+            this.chosenTickerAnyBase = this.chosenTickerAny.substring(0,this.chosenTickerAny.length-4)
+        }
     }
 }

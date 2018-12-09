@@ -26,6 +26,9 @@ class Strategy (TraderStrategy):
         self.opLastBuyIndex = -1
         self.opLastIndexBeforeOperation = -1
         self.opIndex = 0
+        
+        
+        
         #self.trueBTCPriceKline = self.tc.loadFromFile('Historical/BTCUSDT_1h_Binance_Numpy_Aug_7.txt.npy')
          
     '''
@@ -33,7 +36,7 @@ class Strategy (TraderStrategy):
     ###########################################################################
     '''
         
-    def run_strategy(self,previous_buy_index=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1):
+    def run_strategy(self,previous_buy_index=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1,tickIndex=0):
         self.previous_buy_index = previous_buy_index
   
         self.opBuyIndices = opBuyIndices
@@ -41,6 +44,15 @@ class Strategy (TraderStrategy):
         self.opLastBuyIndex = opLastBuyIndex
         self.opLastIndexBeforeOperation = opLastIndexBeforeOperation
         self.opIndex = 0
+
+        #print("======RUNNING STRATEGY AGAIN======OPEN")
+        #print(self.opBuyIndices)
+        #print(self.opSellIndices)
+        #print(self.opLastBuyIndex)
+        #print(self.opLastIndexBeforeOperation)
+        #print("======RUNNING STRATEGY AGAIN======CLOSE")
+        
+        
         
         ops = {}
         
@@ -49,12 +61,12 @@ class Strategy (TraderStrategy):
         dtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
                            max_view_amount=self.tc.max_view,
-                           pad_view=self.tc.pad_view,second_kline = self.tc.real_kline,len_print=True)
+                           pad_view=self.tc.pad_view,second_kline = self.tc.real_kline,len_print=True,tickIndex=tickIndex)
         
         convdtl = TraderDetail(self.tc.kline,
                            start_index=self.tc.start_view,
                            max_view_amount=self.tc.max_view,
-                           pad_view=self.tc.pad_view,convert=True,second_kline = self.tc.real_kline)
+                           pad_view=self.tc.pad_view,convert=True,second_kline = self.tc.real_kline,tickIndex=tickIndex)
         
         hkdtl = dtl
         
@@ -65,7 +77,7 @@ class Strategy (TraderStrategy):
             hkdtl = TraderDetail(hkdtl.HEIKIN(),
                                  start_index=self.tc.start_view,
                                  max_view_amount=self.tc.max_view,
-                                 pad_view=self.tc.pad_view)
+                                 pad_view=self.tc.pad_view,tickIndex=tickIndex)
         
         
              
@@ -114,7 +126,7 @@ class Strategy (TraderStrategy):
         
         ops["out1conv"] = convdtl.CM_Ultimate_MA_MTF_V2(convdtl.close,strip=True)
         #ops["trendbaremaconv"],ops["trendbarcolorconv"] = convdtl.CM_Modified_Heik_Trend_Bars(34*16,"lime","red",strip=True)
-        ops["trendbaremaconv"],ops["trendbarcolorconv"] = convdtl.CM_Modified_Heik_Trend_Bars(34*2,"lime","red",strip=True)
+        ops["trendbaremaconv"],ops["trendbarcolorconv"] = hkdtl.CM_Modified_Heik_Trend_Bars(34*2,"lime","red",strip=True)
         
         #ops["volume"] = hkdtl.EMA(hkdtl.VOLUME(),34,strip=True)
         #ops["trades"] = hkdtl.EMA(hkdtl.TRADES(),34,strip=True)
@@ -415,7 +427,14 @@ class Strategy (TraderStrategy):
     '''
     
     def buy(self,ops,index):
+        
+        #if(index>990):
+            #if(index==991):
+                #return True
+            #return False
+        
         if(index>self.opLastIndexBeforeOperation or self.opLastIndexBeforeOperation==-1 or self.opLastBuyIndex == -1 or len(self.opBuyIndices)==0):
+           
             stamp = datetime.fromtimestamp(ops['closetime'][index]/1000)
             weekday = stamp.weekday()
             if(weekday>=7):
@@ -430,12 +449,17 @@ class Strategy (TraderStrategy):
             and ops["kamaeam1"][index]>ops["kamaeam1"][index-1]):
                  return True
         else:
+            if(self.opIndex>=len(self.opBuyIndices)):
+                return False
             
-            
-            '''
-            if(self.previous_buy_index==index):
+            if(self.opBuyIndices[self.opIndex]==index):
+                #print("buy index",self.opBuyIndices[self.opIndex])
                 return True
-            '''
+            
+            if(self.opBuyIndices[self.opIndex]==0 and index ==1):
+                self.opIndex = self.opIndex +1
+                return False
+
             return False
         
         
@@ -554,6 +578,56 @@ class Strategy (TraderStrategy):
     '''
     
     def sell(self,ops,index,buy_index):
+        #if(index>990):
+            #if(index==998):
+                #return True
+            #return False
+        
+        if(index>self.opLastIndexBeforeOperation or self.opLastIndexBeforeOperation==-1 or self.opLastBuyIndex == -1 or len(self.opBuyIndices)==0):
+            #print(index,self.opLastIndexBeforeOperation,"SELL")
+            maxatr = ops["atr"][buy_index] #np.max([ops["atr"][buy_index],ops["atr"][index]])
+            
+            if ( ops["trendbaremaconv"][index]<ops["trendbaremaconv"][index-1]):
+                return True   
+            
+           
+            if ( ops["close"][index]>=((maxatr*10)+ops["close"][buy_index])):
+                print(maxatr,index,buy_index)
+                return True   
+            
+            #if ( ops["close"][index]<=(ops["close"][buy_index]-(maxatr*2))):
+                #return True  
+            
+            return False    
+        else:
+            if(self.opIndex>=len(self.opBuyIndices)):
+                return False
+            
+            if(self.opSellIndices[self.opIndex]==index):
+                #print("sell index",self.opSellIndices[self.opIndex])
+                self.opIndex = self.opIndex+ 1
+                return True
+
+            return False    
+        
+        '''
+        maxatr = np.max([ops["atr"][buy_index],ops["atr"][index]])
+        if ( ops["trendbaremaconv"][index]<ops["trendbaremaconv"][index-1]):
+            return True   
+        
+       
+        if ( ops["close"][index]>=((maxatr*10)+ops["close"][buy_index])):
+            return True   
+        
+        #if ( ops["close"][index]<=(ops["close"][buy_index]-(maxatr*2))):
+            #return True  
+        
+        return False
+        '''
+        
+        
+        
+        
         '''
         if(ops["highhks"][index]<ops["highhks"][index-1] or ops["diffhks2"][index]<ops["diffhks2"][index-1]):
             return True
@@ -623,18 +697,7 @@ class Strategy (TraderStrategy):
             return True
         '''
         
-        maxatr = np.max([ops["atr"][buy_index],ops["atr"][index]])
-        if ( ops["trendbaremaconv"][index]<ops["trendbaremaconv"][index-1]):
-            return True   
         
-       
-        if ( ops["close"][index]>=((maxatr*10)+ops["close"][buy_index])):
-            return True   
-        
-        #if ( ops["close"][index]<=(ops["close"][buy_index]-(maxatr*2))):
-            #return True  
-        
-        return False
         
     
     '''

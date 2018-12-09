@@ -28,10 +28,8 @@ if __name__=="__main__":
     signal.signal(signal.SIGINT, signal_handler)
     print('Press Ctrl+C')
     '''
-    #print("Main Start")
-    
-    
-        
+
+    asset_price = -1
     tasks = [
         {
             'id': 1,
@@ -172,6 +170,9 @@ if __name__=="__main__":
         @app.route('/init-strategy', methods=['POST'])
         @app.errorhandler(404)
         def get_init_strategy():
+            print("===========================================================")
+            print("===========================================================")
+            print("===========================================================")
             data = json.loads(request.data)
             print(data)
             time = data["time"]
@@ -184,7 +185,15 @@ if __name__=="__main__":
             opSellIndices = []
             opLastBuyIndex = -1
             opLastIndexBeforeOperation = -1
+            debugVal = -1
+            tickIndex = 0
             
+            if ("tickIndex" in data):
+                tickIndex = data["tickIndex"]
+                
+            if ("debugVal" in data):
+                debugVal = data["debugVal"]
+                
             if ("lastCloseTime" in data):
                 lastCloseTime = data["lastCloseTime"]
             
@@ -235,13 +244,23 @@ if __name__=="__main__":
              
             override = {"base":base,"asset":asset,"time":time,"file":file,"strategy":strategy}
             print ("Override",override)
-            
-            tc = TraderControl(config,None,override=override)
- 
-            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex,opBuyIndices=opBuyIndices,opSellIndices=opSellIndices,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation) 
+     
+            global asset_price
+            print("ASSET PRICE",asset_price,"AAAAAAAAAAAAAAAAAAAAAAAAA")
+            tc = TraderControl(config,None,override=override,debugVal=debugVal,asset_price=asset_price)
+            asset_price = tc.asset_price    
+           
+            if(debugVal>-1):
+                print("=======DEBUGGING MODE=====")
+            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex,opBuyIndices=opBuyIndices,opSellIndices=opSellIndices,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,tickIndex=tickIndex) 
             complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
-
-
+            
+            print("===========================================================")
+            print("===========================================================")
+            print("===========================================================")
+            
+            if(debugVal>-1):
+                debugVal = debugVal +1
             return json.dumps(complete_ops,cls=MyEncoder)
             
             #return jsonify({'status': "niceee"})
@@ -282,7 +301,11 @@ if __name__=="__main__":
                  filename = "Historical/"+pair+"_"+time+"_Binance_Numpy_"+todayDateFormatted+".npy"
             
             print(filename,"does not exists. Starting Download.")
-            tc = TraderControl(config,None,ignoreInit=True)
+            
+            global asset_price
+            tc = TraderControl(config,None,ignoreInit=True,asset_price=asset_price)
+            asset_price = tc.asset_price
+            
             utcdate = datetime.strptime(previousDateFormatted, '%Y-%m-%d').strftime ("%Y-%m-%d %H:%M:%S")
             ticks = tc.historical(time,pair,utcdate)
             print("Download for",pair,"-",time,"-",previousDateFormatted,"-",todayDateFormatted,"completed. Saving...")
@@ -307,10 +330,12 @@ if __name__=="__main__":
             #print(sell_index)
             #print(evaled)
             
-            ops,buy_index,sell_index,evaled = tc.test_run_strategy() 
-            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
-
-
+            ops,buy_index,sell_index,evaled,group = tc.test_run_strategy() 
+            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled,'group':group}
+            
+            print(group)
+            print(evaled)
+            
             return json.dumps(complete_ops,cls=MyEncoder)
             
         app.run(debug=True)

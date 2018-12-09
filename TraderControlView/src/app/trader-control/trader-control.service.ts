@@ -9,7 +9,7 @@ import { ControlData } from './control-data/control-data';
 export class TraderControlService {
 
 	loadTestFromFile: boolean = true;
-
+	
 	constructor(private http: HttpClient) {
 
 	}
@@ -88,7 +88,7 @@ export class TraderControlService {
 		return new Promise((resolve, reject) => {
 			
 			let historialQuery = {time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
-			console.log(historialQuery);
+			//console.log(historialQuery);
 			this.postRequest('/historical', historialQuery).subscribe(
 				data => {
 					resolve(data);
@@ -101,7 +101,7 @@ export class TraderControlService {
 		})
 	}
 
-	public pullInitialStrategyData(controlData:ControlData):Promise<any> {
+	public pullInitialStrategyData(controlData:ControlData,debugMode:boolean, debugIndex:number,tickIndex:number):Promise<any> {
 		return new Promise((resolve, reject) => {
 			let lastCloseTime:number = undefined;
 
@@ -113,9 +113,10 @@ export class TraderControlService {
 				forceState = controlData.getNextTickBuyAndSellIndex();
 			}
 			
+			let debugVal = debugMode?debugIndex:-1;
 
-			let historialQuery = {forceState:forceState,lastBuyIndex:lastBuyIndex,lastCloseTime:lastCloseTime,time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy}
-			console.log(historialQuery);
+			let historialQuery = {forceState:forceState,lastBuyIndex:lastBuyIndex,lastCloseTime:lastCloseTime,time:controlData.chosenTime,ticker:controlData.chosenTickerAny,strategy:controlData.chosenStrategy,debugVal:debugVal,tickIndex:tickIndex}
+			//console.log(historialQuery);
 			this.postRequest('/init-strategy', historialQuery).subscribe(
 				data => {
 					resolve(data);
@@ -128,9 +129,13 @@ export class TraderControlService {
 		})
 	}
 
-	public getServerTime():Promise<number> {
-		return new Promise((resolve, reject) => {
-			this.getRequet('/server-time',{}).subscribe(
+	public getServerTime(debugMode:boolean):Promise<number> {
+		if(debugMode) {
+			return Promise.resolve(10000000000000000000000)
+		}
+		else 
+			return new Promise((resolve, reject) => {
+				this.getRequet('/server-time',{}).subscribe(
 				data => {
 					resolve(data.servertime as number);
 				},
@@ -138,7 +143,6 @@ export class TraderControlService {
 					reject(error)
 				}
 			);
-
 		})
 	}
 

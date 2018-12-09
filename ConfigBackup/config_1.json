@@ -9,10 +9,10 @@
     
     "time":"15m",
     "strategy_base":"",
-    "strategy":["Strategy_HDTL_v13"],
+    "strategy":["Strategy_ZigZag_v12"],
 	
 	"is_file_load":true,
-	"file":"",
+	"file":"Historical/MDAETH_5m_Binance_Numpy_Oct_07.txt.npy",
 	"is_append":true,
 	"view":	{
 				"start":100000000,

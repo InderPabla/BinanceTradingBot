@@ -15,6 +15,8 @@ declare var Timer: any;
 const SECOND_MS = 1000;
 const MIN_MS = SECOND_MS*60;
 const HOUR_MS = MIN_MS*60;
+const HALF_HOUR_MS = (MIN_MS*60)/2.0;
+const QUARTER_HOUR_MS = (MIN_MS*30)/4.0;
 
 @Component({
 	selector: 'app-trader-control',
@@ -30,38 +32,42 @@ export class TraderControlComponent implements OnInit {
 
 	constructor(private _traderService: TraderControlService, private elementRef: ElementRef) { }
 
+	highChartVisible:boolean = true;
+	debugShowState:boolean = true;
+
+	debugMode:boolean = true;
+	debugIndex:number = 0;
+	tickIndex:number = 0;
+
+	strategyButtonEnabled:boolean= true;
+
+	stop:boolean = false;
+
 	ngOnInit() {
 
-
 		this.controlData = new ControlData();
-
+		
 		this._traderService.getConfig()
-			.then((result: any) => {
-				console.log("CONFIG", result);
-				//return this._traderService.getTestData()
-
-
-				return this.getBinanceTickers()
-			})
-			.then((binanceTickers: BinanceTickers) => {
-				this.controlData.setBinanceTickers(binanceTickers);
-				console.log(this.controlData);
-				return this._traderService.getStrategies();
-			})
-			.then((strategyData: StrategyData) => {
-				this.controlData.setStrategies(strategyData);
-			})
-			.catch((err) => {
-				console.log(err);
-			})
-
-
+		.then((result: any) => {
+			return this.getBinanceTickers()
+		})
+		.then((binanceTickers: BinanceTickers) => {
+			this.controlData.setBinanceTickers(binanceTickers);
+			//console.log(this.controlData);
+			return this._traderService.getStrategies();
+		})
+		.then((strategyData: StrategyData) => {
+			this.controlData.setStrategies(strategyData);
+		})
+		.catch((err) => {
+			//console.log(err);
+		})
 	}
 
-
+	
 	getBinanceTickers(): Promise<any> {
 		return new Promise((resolve, reject) => {
-			let futureTime = HOUR_MS;
+			let futureTime = QUARTER_HOUR_MS;
 			let localStoageTickers: any = localStorage.getItem('tickers');
 			if (localStoageTickers) localStoageTickers = JSON.parse(localStoageTickers);
 
@@ -72,7 +78,7 @@ export class TraderControlComponent implements OnInit {
 						let newResult = { dateCreated: new Date(), tickers: result };
 						localStorage.removeItem('tickers')
 						localStorage.setItem('tickers', JSON.stringify(newResult));
-						console.log("DELETING OLD LOCALSTORAGE TICKER");
+						//console.log("DELETING OLD LOCALSTORAGE TICKER");
 						resolve(new BinanceTickers(result));
 					})
 					.catch((err) => {
@@ -80,7 +86,7 @@ export class TraderControlComponent implements OnInit {
 					})
 			}
 			else {
-				console.log("RESOLVING OLD LOCALSTORAGE TICKER");
+				//console.log("RESOLVING OLD LOCALSTORAGE TICKER");
 				resolve(new BinanceTickers(localStoageTickers.tickers))
 			}
 
@@ -96,7 +102,7 @@ export class TraderControlComponent implements OnInit {
 		if(this.highChartObj && this.controlData.historialPulled==true) {
 			
 			this.controlData.setExtreme(this.highChartObj.ref.xAxis[0].getExtremes());
-			console.log("SETTING EXTREME",this.controlData.extreme);
+			//console.log("SETTING EXTREME",this.controlData.extreme);
 		}
 
 		let openTimeData: number[] = realData["openTime"];
@@ -160,18 +166,28 @@ export class TraderControlComponent implements OnInit {
 				events: {
 
 					load: function () {
-						var max = this.xAxis[0].max,
+						/*var max = this.xAxis[0].max,
 							range = 72 * 3600 * 1000; // one day
 						this.xAxis[0].setExtremes(max - range, max);
 						_this.elementRef.nativeElement.getElementsByClassName('highcharts-plot-background')[0]
 							.addEventListener("dragstart", function (event) {
-								console.log("DRAG STARTED", event);
+								//.log("DRAG STARTED", event);
 							});
 
 						document.addEventListener("dragstart", function (event) {
-							console.log("drag from document? ", event);
-						}, false);
+							//console.log("drag from document? ", event);
+						}, false);*/
 
+						// this.xAxis[0].setExtremes(_this.controlData.extreme.userMin, _this.controlData.extreme.userMax);
+
+						console.log(this.xAxis[0].getExtremes())
+						console.log(_this.controlData.extreme)
+
+						if(_this.controlData.extreme)
+						this.xAxis[0]
+						.setExtremes(
+							_this.controlData.extreme.userMin, 
+							_this.controlData.extreme.userMax==_this.controlData.extreme.dataMax?this.xAxis[0].getExtremes().dataMax:((this.xAxis[0].getExtremes().dataMax-_this.controlData.extreme.dataMax)+_this.controlData.extreme.userMax));
 					},
 
 					click: function () {
@@ -213,15 +229,17 @@ export class TraderControlComponent implements OnInit {
 
 		if(this.highChartObj && this.controlData.historialPulled==true && this.controlData.extreme) {
 			
-			console.log("SETTING EXTREME USER",this.controlData.extreme);
+			//console.log("SETTING EXTREME USER",this.controlData.extreme);
+
 			setTimeout(function () {
-				let max = _this.highChartObj.ref.xAxis[0].dataMax;
-				console.log("MIN MAX SET:",max,_this.controlData.extreme.userMin);
-				_this.highChartObj.ref.xAxis[0].setExtremes(_this.controlData.extreme.userMin, max)
+				let max = _this.highChartObj.ref.xAxis[0].dataMax; //dataMax
+				//console.log("MIN MAX SET:",max,_this.controlData.extreme.userMin);
+				//_this.highChartObj.ref.xAxis[0].setExtremes(_this.controlData.extreme.userMin,max)
+					//_this.controlData.extreme.userMin, max)
 			}, 100)
 		}
 		else {
-			console.log("SETTING EXTREME ZOOM IN");
+			//console.log("SETTING EXTREME ZOOM IN");
 			setTimeout(function () {
 				let other: any = _this.highChartObj;
 				let max = _this.highChartObj.ref.xAxis[0].dataMax
@@ -258,7 +276,7 @@ export class TraderControlComponent implements OnInit {
 		let lowData: number[] = realData["low"];
 		let openTimeData: number[] = realData["openTime"];
 		let closeTimeData: number[] = realData["closeTime"];
-		let smaData = realData["30sma"];
+		let smaData = realData["30sma"]; //realData["30sma"];
 
 		for (let i = 0; i < closeData.length; i++) {
 			let open: number = openData[i];
@@ -277,10 +295,10 @@ export class TraderControlComponent implements OnInit {
 		return new Promise((resolve, reject) => {
 			this._traderService.pullHistoricalTickerData(this.controlData)
 			.then((result) => {
-				console.log(result);
+				//console.log(result);
 				if (result && result.status === "success") {
 					this.controlData.setHistorialPulled(true)
-					return this._traderService.pullInitialStrategyData(this.controlData);
+					return this._traderService.pullInitialStrategyData(this.controlData,this.debugMode,this.debugIndex,this.tickIndex);
 				}
 				else {
 					throw "Error downloading historial data"
@@ -288,11 +306,19 @@ export class TraderControlComponent implements OnInit {
 
 			})
 			.then((result) => {
+				if(this.debugMode) {
+					this.debugIndex++;
+				}
+				this.tickIndex++;
+
 				this.highChartObj;
 				this.sma = [];
 				console.log(result["evaled"]);
 				this.controlData.setEvaled(result["evaled"]);
 				this.buildStockDataWithArray(result["ops"]);
+
+				//console.log("=========BEFORE SETTING LAST BUY INDEX=========")
+				console.log(this.controlData.evaled)
 				this.controlData.setLastBuyIndex();
 
 				this.controlData.applyNewState();
@@ -310,19 +336,32 @@ export class TraderControlComponent implements OnInit {
 
 	}
 
-	strategyLoop(): void {
-		if(this.controlData.historialPulled) {
-			console.log("LAST CLOSE TIME IS",this.controlData.lastCloseTime);
-			console.log("CALLING TO PULL DATA");
-		}
+	toggleStop() {this.stop=!this.stop;}
 	
-		this.runStrategy()
-		.then((result) => {
-			this.awaitTick3();
-		})
-		.catch((err) => {
-			console.log(err);
-		})
+	strategyLoop(isFromButtonClick?:boolean): void {
+		if(this.stop==false) {
+			if(isFromButtonClick) {
+				this.strategyButtonEnabled = false
+				console.log(this.strategyButtonEnabled)
+			}
+			
+			this.controlData.setTickerParts();
+	
+			if(this.controlData.historialPulled) {
+				//console.log("LAST CLOSE TIME IS",this.controlData.lastCloseTime);
+				//console.log("CALLING TO PULL DATA");
+			}
+		
+			this.runStrategy()
+			.then((result) => {
+				this.awaitTick3();
+	
+			})
+			.catch((err) => {
+				console.log(err);
+			})	
+		}
+		
 	}
 
 
@@ -333,11 +372,11 @@ export class TraderControlComponent implements OnInit {
 		
 		this.controlData.setLastCloseTime(closeTime)
 		
-		this._traderService.getServerTime()
+		this._traderService.getServerTime(this.debugMode)
 		.then((serverTime: number) => {
 			serverTime= serverTime/1000.0;
 			let differenceTime:number = (closeTime-serverTime);
-			console.log("DIFFERENCE TIME",differenceTime);
+			//console.log("DIFFERENCE TIME",differenceTime);
 			if(differenceTime>0) { 
 				var timerInstance = new Timer();
 				timerInstance.start({precision: 'secondTenths'});
@@ -350,24 +389,25 @@ export class TraderControlComponent implements OnInit {
 					if(combined>=differenceTime){
 						timerInstance.stop();
 						_thisc.controlData.stopTimer();
-						console.log("STOPPING TIMER");
+						//console.log("STOPPING TIMER");
 						_thisc.strategyLoop()
 
-						_thisc._traderService.getServerTime()
-						.then((serverTime: number) => {
-							serverTime= serverTime/1000.0;
-							console.log("NEW TRUE DIFFEREINCE:",serverTime-closeTime);
-						})
-						.catch((err) => {
-							console.log(err);
-						})	
+						// _thisc._traderService.getServerTime(this.debugMode)
+						// .then((serverTime: number) => {
+						// 	serverTime= serverTime/1000.0;
+						// 	//console.log("NEW TRUE DIFFEREINCE:",serverTime-closeTime);
+						// })
+						// .catch((err) => {
+						// 	console.log(err);
+						// })	
 
 					}
 					
 				});	
 			}
 			else {
-				console.log("DIFFERENCE IS NEGATIVE START LOOP AGAIN");
+			
+				//console.log("DIFFERENCE IS NEGATIVE START LOOP AGAIN");
 				_thisc.strategyLoop()
 			}
 		})
@@ -388,5 +428,10 @@ export class TraderControlComponent implements OnInit {
 		let buyIndex = row.buyIndex - 1;
 		if (buyIndex < 0) buyIndex = 0;
 		this.highChartObj.ref.xAxis[0].setExtremes(this.controlData.openTime[buyIndex], this.controlData.openTime[sellIndex]);
+	}
+
+	
+	hideHighChart() {
+		this.highChartVisible = !this.highChartVisible;
 	}
 }

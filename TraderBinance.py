@@ -54,14 +54,19 @@ class TraderBinance:
         self.client = Client(api_key, secret_key)
     
     def historial(self,time,pair,start_date):
+        print("########################GET HISTORIAL########################")
         ticks = self.client.get_historical_klines(pair,self.TIME_OPTION[time],start_date)
         #print (len(ticks))
         return np.array(self.array_string_to_float(ticks))
      
     def current_ticker(self,pair=""):
+        print("########################GET CURRENT TICKERS########################")
         self.client.get_ticker()
         
     def get_candles(self,time="",pair="",lastCloseTime=-1):
+        print("########################GET CANDLES########################")
+  
+        
         time_frame = self.binance_time(time)
         ticks = np.array(self.array_string_to_float(self.client.get_klines(symbol=pair, interval=time_frame)))
         if(lastCloseTime==-1):
@@ -82,9 +87,11 @@ class TraderBinance:
                 return self.get_candles(time=time,pair=pair,lastCloseTime=lastCloseTime)
     
     def get_tickers(self):
+        print("########################GET ALL TICKERS########################")
         return self.client.get_ticker()
     
     def get_current_server_time(self):
+        print("########################GET SERVER TIME########################")
         server_time = self.client.get_server_time()
         #print(self.client.get_exchange_info())
         return server_time["serverTime"]

@@ -70,7 +70,7 @@ class TraderStrategy(object):
             buy_state = True
             skip_sell = False
 
-            for index in range(1,size):
+            for index in range(1,size-1):
                 
                 # BUY STATE #################################################
                 if (buy_state == True): #buy state active

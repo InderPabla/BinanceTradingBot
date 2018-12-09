@@ -31,11 +31,9 @@
                 </ng-container>
             </mat-select>
         </mat-form-field>
-    
-        <button mat-button style="background-color:white;color:black" (click)="strategyLoop()">Start Strategy</button>
     </div>
     
-    <div class="col-12 controlLine">
+    <div class="col-12">
         <mat-form-field class="matFormSpace">
             <input matInput placeholder="Chosen Ticker" [(ngModel)]="controlData.chosenTickerAny">
         </mat-form-field>
@@ -45,13 +43,65 @@
         <button mat-button  (click)="controlData.sortTickerByCustom()"  style="background-color:white;color:black" >Custom Sort</button>
         <h1 *ngIf="controlData.isNextTickTimerStarted" class="timer">Next Open: <span [ngClass]="{'high':controlData.nextTickTimer<=30 && controlData.nextTickTimer>10,'low':controlData.nextTickTimer<=10}">{{controlData.nextTickTimer.toFixed(2)}}(s)</span></h1>
     </div>
-    
-    
-    <div class="col-12 controlLine" style="color:white" >
-        
+
+    <div class="col-12 controlLine" style = "padding-bottom:10px">
+        <button [disabled]="!strategyButtonEnabled" mat-button  class="matFormSpace" style="background-color:white;color:black" (click)="strategyLoop(true)">Start Strategy</button>
+        <button mat-button  class="matFormSpace" style="background-color:white;color:black" (click)="toggleStop()"><span *ngIf="stop">Start</span><span *ngIf="!stop">Stop</span></button>
+        <mat-checkbox  class="matFormSpace" [(ngModel)]="debugMode" >Debug Mode</mat-checkbox>
+        <h1 *ngIf="debugMode" class="timer">Tick Number: {{debugIndex}}</h1>
     </div>
     
-    <div *ngIf="highChartObj" [chart]="highChartObj"></div>
+
+
+    <div *ngIf="(highChartObj && controlData.evaled)" class="col-12 controlLine stateInformation" style="color:white;padding: 10px;" >
+        <ng-container *ngIf="controlData.evaled.length>0">
+            <ng-container *ngIf="controlData.evaled[controlData.evaled.length-1].sellIndex===-1; then sellState; else buyState;"></ng-container> 
+
+            <ng-template #sellState>
+                <div>
+                    <ng-container *ngIf="controlData.evaled[controlData.evaled.length-1].buyIndex===controlData.openTime.length-2; then sellStateBuyNow; else sellStateBought;"></ng-container> 
+                </div>
+            </ng-template>   
+            
+            <ng-template #buyState>
+                <div>
+                    <ng-container *ngIf="controlData.evaled[controlData.evaled.length-1].sellIndex===controlData.openTime.length-2; then buyStateSellNow; else buyStateSold;"></ng-container> 
+                </div>
+            </ng-template>  
+
+            <ng-template #sellStateBuyNow>
+                <p class="stateInformation stateTextBuy">BUY <span>{{controlData.evaled[controlData.evaled.length-1].amount | decx}} {{controlData.chosenTickerAnyBase}}</span> FOR <span>{{controlData.evaled[controlData.evaled.length-1].buyLow | decx}} {{controlData.chosenTickerAnyAsset}}</span> NOW.</p>     
+                <p class="stateInformation stateTextSell">Waiting for <span>SELL</span> order.</p> 
+            </ng-template>
+            
+            <ng-template #sellStateBought>
+                <p class="stateInformation stateTextSell">Waiting for <span>SELL</span> order.</p> 
+                <p class="stateInformation stateTextBuy">Bought <span>{{(controlData.openTime.length-2)-controlData.evaled[controlData.evaled.length-1].buyIndex}}</span> Ticks Ago.</p>         
+                <p class="stateInformation stateTextBuy">Bought <span>{{controlData.evaled[controlData.evaled.length-1].amount | decx}} {{controlData.chosenTickerAnyBase}}</span> FOR <span>{{controlData.evaled[controlData.evaled.length-1].buyLow | decx}} {{controlData.chosenTickerAnyAsset}}</span> </p> 
+            </ng-template>
+
+            <ng-template #buyStateSellNow>
+                <p class="stateInformation stateTextSell">SELL <span>{{controlData.evaled[controlData.evaled.length-1].amount | decx}} {{controlData.chosenTickerAnyBase}}</span> FOR <span>{{controlData.evaled[controlData.evaled.length-1].sellLow | decx}} {{controlData.chosenTickerAnyAsset}}</span> NOW.</p>          
+                <p class="stateInformation stateTextBuy">Waiting for <span>BUY</span> order.</p> 
+            </ng-template>
+
+            <ng-template #buyStateSold>
+                <p class="stateInformation stateTextBuy">Waiting for <span>BUY</span> order.</p> 
+                <p class="stateInformation stateTextSell">Sold <span>{{(controlData.openTime.length-2)-controlData.evaled[controlData.evaled.length-1].sellIndex}}</span> Ticks Ago.</p>         
+                <p class="stateInformation stateTextSell">Sold <span>{{controlData.evaled[controlData.evaled.length-1].amount | decx}} {{controlData.chosenTickerAnyBase}}</span> FOR <span>{{controlData.evaled[controlData.evaled.length-1].sellLow | decx}} {{controlData.chosenTickerAnyAsset}}</span></p>     
+            </ng-template>
+
+
+
+
+        </ng-container>   
+    </div>
+    
+    <div *ngIf="highChartObj" class="col-12" style="padding-top: 10px;padding-bottom: 10px;">
+       <button (click)="hideHighChart()" mat-button style="background-color:white;color:black;"><span *ngIf="highChartVisible">Hide</span><span *ngIf="!highChartVisible">Expand</span></button>
+    </div>
+
+    <div class = "fadein" *ngIf="highChartObj" [chart]="highChartObj" [ngClass]="{'fadeout':!highChartVisible}"></div>
     
     <app-evaled-data *ngIf="highChartObj && controlData && controlData.evaled && controlData.evaled.length>0" [evaled]=controlData.evaled [parent]=this></app-evaled-data>
     

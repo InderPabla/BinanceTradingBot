@@ -19,13 +19,22 @@ warnings.filterwarnings(action='ignore', category=DeprecationWarning)
 
 class TraderDetail:
         
-    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16,second_kline=[],len_print=False):
+    def __init__(self,kline,start_index=-1,pad_view=250,max_view_amount=1000, convert=False, convertFrom=16,second_kline=[],len_print=False,tickIndex=-1):
         self.className = "TraderDetail"
         self.math = TraderMath()
         self.kline = kline
         self.len_print = len_print
         if(len(second_kline)>0):
             self.kline = self.merge(self.kline,second_kline)
+        
+        
+        total_size = 3000
+        if(tickIndex>-1):
+            total_size = total_size + tickIndex
+            
+        if(len(self.kline)>total_size and tickIndex>-1):
+           
+            self.kline = self.kline[len(self.kline)-total_size:len(self.kline)]
             
         self.close = self.getKey(self.kline,tb.CLOSE_INDEX)
         self.high = self.getKey(self.kline,tb.HIGH_INDEX)
@@ -35,7 +44,7 @@ class TraderDetail:
         self.closeTime = self.getKey(self.kline,tb.CLOSE_TIME_INDEX)
         
         if(convert):
-            self.convert(convertFrom)
+            self.convert2(convertFrom)
         
         self.trades = self.getKey(self.kline,tb.TRADES_INDEX)
         self.volume = self.getKey(self.kline,tb.ASSET_VOLUME_INDEX)
@@ -61,7 +70,8 @@ class TraderDetail:
                 self.start_index = self.start_index+self.pad_view
                 self.max_view = self.start_index+self.max_view
       
-        
+            if(tickIndex>-1):
+                self.start_index = self.start_index - tickIndex
         #BASIC Technical Details (Ex: MACD, etc)
     
     def merge(self,kline1,kline2):
@@ -128,6 +138,50 @@ class TraderDetail:
             '''         
                 
         return close
+    
+    def convert2(self,convertFrom):
+        conv_close= []
+        conv_high=[]
+        conv_open=[]
+        conv_low=[]
+        len_val = len(self.close)
+        
+        open_val = 0
+        close_val = 0
+        high_val  = float('-inf')
+        low_val = float('inf')
+        
+        for i in range(0,len_val):
+            
+        
+            #if(i%convertFrom==0):
+            open_val = 0
+            close_val = 0
+            high_val  = float('-inf')
+            low_val = float('inf')
+  
+            open_val = self.open[i]
+              
+            for j in range(i-convertFrom,i+1):
+            #for j in range(i,i+convertFrom):
+                if(j<=len_val-1 and j>=0):
+                    close_val = self.close[j]
+                    
+                    if(self.high[j]>high_val):
+                        high_val = self.high[j]
+                    
+                    if(self.low[j]<low_val):
+                        low_val = self.low[j]
+                        
+            conv_close.append(close_val)
+            conv_high.append(high_val)
+            conv_open.append(open_val)
+            conv_low.append(low_val)
+                
+        self.close = conv_close
+        self.open = conv_open
+        self.high = conv_high
+        self.low = conv_low
         
     def convert(self,convertFrom):
         conv_close= []

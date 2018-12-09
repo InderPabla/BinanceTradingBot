@@ -36,3 +36,77 @@
 .tickerGood {
     color:lime;
 }
+
+
+
+
+/* .fadein, .fadeout {
+    opacity: 0;
+    -moz-transition: opacity 0.4s ease-in-out;
+    -o-transition: opacity 0.4s ease-in-out;
+    -webkit-transition: opacity 0.4s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
+}
+.fadein {
+    opacity: 1;
+} */
+
+.fadein.fadeout {
+	max-height: 0;
+}
+
+.fadein {
+	overflow-y: hidden;
+	max-height: 100%; /* approximate max height */
+
+	transition-property: all;
+	transition-duration: 2s;
+    /* transition-timing-function: cubic-bezier(0, 2, 2, 1); */
+    transition-timing-function: 2s ease;
+}
+
+
+
+.stateInformation {
+    margin:0;
+}
+
+.stateInformation+.stateInformation {
+    margin-left:10px;
+}
+
+.stateTextSell {
+    background: rgb(150,0,0);
+    display:inline-block;
+    padding:5px;
+    border-radius: 5px;
+    border: 1px dashed white;
+    font-size:15px;
+    color: darkorange;
+    font-weight: bold;
+}
+
+.stateTextSell > span {
+    font-weight: bold;
+    color:white
+}
+
+.stateTextBuy + .stateTextBuy {
+margin-left:10px;
+}
+
+.stateTextBuy{
+    background: rgb(0,150,0);
+    display:inline-block;
+    padding:5px;
+    border-radius: 5px;
+    border: 1px dashed white;
+    font-size:15px;
+    color: darkorange;
+    font-weight: bold;
+}
+
+.stateTextBuy > span {
+    font-weight: bold;
+    color:white;
+}

@@ -50,7 +50,8 @@ class TraderControl:
     KEY_PLOT = 'plot'
     KEY_IS_PROFIT_PLOT = 'profitPlot'
     
-    def __init__(self,config,filePath,override=None,ignoreInit=False):
+    def __init__(self,config,filePath,override=None,ignoreInit=False,debugVal=-1,asset_price=-1):
+        self.debugVal = debugVal
         
         self.className = "TraderControl"
         self.config = config
@@ -60,6 +61,7 @@ class TraderControl:
         self.secret_key = self.get_secret_key()
         self.api_key = self.get_api_key()
         self.tb = TraderBinance(self.secret_key,self.api_key)
+        self.asset_price = asset_price
         
         if(ignoreInit==False):    
            
@@ -74,7 +76,8 @@ class TraderControl:
                 self.config_data[self.KEY_STRA]  = [override[self.KEY_STRA]]
              
             self.currency_amount = self.get_currency_amount()
-            self.asset_price = self.get_asset_price()
+            if(self.asset_price == -1):
+                self.asset_price = self.get_asset_price()
             
             self.asset_amount = self.currency_amount/self.asset_price
             print(pin(Fore.YELLOW)+"=====>"+pin(Fore.RED)+"Asset Price in Dollars",self.asset_price,self.asset_amount,str(self.currency_amount),"Base:",self.config_data[self.KEY_BASE],"Asset",self.config_data[self.KEY_ASSET]+rst())
@@ -204,7 +207,7 @@ class TraderControl:
         sys.exit(0)
     
 
-    def test_run_strategy(self,lastCloseTime=-1,lastBuyIndex=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1):
+    def test_run_strategy(self,lastCloseTime=-1,lastBuyIndex=-1,opBuyIndices=[],opSellIndices=[],opLastBuyIndex=-1,opLastIndexBeforeOperation=-1,tickIndex=0):
         print("-------------TEST RUN PARAMS------------")
         print("lastCloseTime",lastCloseTime,"lastBuyIndex",lastBuyIndex,"opLastBuyIndex",opLastBuyIndex,"opLastIndexBeforeOperation",opLastIndexBeforeOperation)
         print("opBuyIndices",opBuyIndices)
@@ -214,8 +217,8 @@ class TraderControl:
         self.get_kline_candles(lastCloseTime=lastCloseTime)
         if(lastBuyIndex>-1):
             lastBuyIndex = lastBuyIndex - 1
-        ops,buy_index,sell_index,evaled = self.strategies[0].run_strategy(previous_buy_index=lastBuyIndex)
-        return ops,buy_index,sell_index,evaled
+
+        return ops,buy_index,sell_index,evaled,group = self.strategies[0].run_strategy(previous_buy_index=lastBuyIndex,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,opSellIndices=opSellIndices,opBuyIndices=opBuyIndices,tickIndex=tickIndex)
         
         
     def run_strategies(self,previous_buy_index=-1):
@@ -330,14 +333,21 @@ class TraderControl:
         else:
             self.kline = np.load(self.file)
  
-        if(self.isAppend==True):
+        if(self.isAppend==True and self.debugVal==-1):
             if use_config == True:
                 pair = self.pair
                 time = self.time
                 self.real_kline = self.tb.get_candles(pair=self.pair,time=self.time,lastCloseTime=lastCloseTime)
             else:
                 self.real_kline = self.tb.get_candles(pair=pair,time=time,lastCloseTime=lastCloseTime)
-                
+        else:
+            self.real_kline= []
+            
+        if(self.debugVal>-1):   
+            self.real_kline = []
+            #print(self.debugVal,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            self.kline = self.kline[0:(len(self.kline)-450)+self.debugVal]
+            
         return self.kline
             
     def get_secret_key(self):

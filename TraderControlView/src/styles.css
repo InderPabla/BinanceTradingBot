@@ -135,3 +135,16 @@ td.mat-cell:first-of-type, td.mat-footer-cell:first-of-type, th.mat-header-cell:
 
 
 
+
+.mat-checkbox{
+    color:white;
+}
+
+.mat-checkbox-inner-container {
+    border: 1px white solid;
+}
+
+.mat-button[disabled] {
+    background-color:rgb(165, 138, 88) !important;
+    color:rgb(0, 0, 0) !important;
+}
