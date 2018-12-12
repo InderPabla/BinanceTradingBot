@@ -252,8 +252,8 @@ if __name__=="__main__":
            
             if(debugVal>-1):
                 print("=======DEBUGGING MODE=====")
-            ops,buy_index,sell_index,evaled = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex,opBuyIndices=opBuyIndices,opSellIndices=opSellIndices,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,tickIndex=tickIndex) 
-            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled}
+            ops,buy_index,sell_index,evaled,group = tc.test_run_strategy(lastCloseTime=lastCloseTime,lastBuyIndex=lastBuyIndex,opBuyIndices=opBuyIndices,opSellIndices=opSellIndices,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,tickIndex=tickIndex) 
+            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled,'group':group}
             
             print("===========================================================")
             print("===========================================================")
@@ -315,33 +315,7 @@ if __name__=="__main__":
             return jsonify({'status': "success"})
         
         
-        @app.route('/test1', methods=['GET'])
-        #@crossdomain(origin=origin)
-        def get_test1():
-            return jsonify({'tasks': tasks})
-         
-        @app.route('/test2', methods=['GET'])
-        #@crossdomain(origin=origin)
-        def get_test2():
-            print("For some reason running this?")
-            tc = TraderControl(config,None)
-            #ops,buy_index,sell_index,evaled = tc.test_run_strategy() 
-            #print(buy_index)
-            #print(sell_index)
-            #print(evaled)
-            
-            ops,buy_index,sell_index,evaled,group = tc.test_run_strategy() 
-            complete_ops = {'ops':ops,'buy_index':buy_index,'sell_index':sell_index,'evaled':evaled,'group':group}
-            
-            print(group)
-            print(evaled)
-            
-            return json.dumps(complete_ops,cls=MyEncoder)
-            
-        app.run(debug=True)
-
-        
-
+        app.run(debug=False)
     '''
     while(True):
         time.sleep(0.5)

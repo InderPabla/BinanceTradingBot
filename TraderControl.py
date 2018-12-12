@@ -218,7 +218,7 @@ class TraderControl:
         if(lastBuyIndex>-1):
             lastBuyIndex = lastBuyIndex - 1
 
-        return ops,buy_index,sell_index,evaled,group = self.strategies[0].run_strategy(previous_buy_index=lastBuyIndex,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,opSellIndices=opSellIndices,opBuyIndices=opBuyIndices,tickIndex=tickIndex)
+        return self.strategies[0].run_strategy(previous_buy_index=lastBuyIndex,opLastBuyIndex=opLastBuyIndex,opLastIndexBeforeOperation=opLastIndexBeforeOperation,opSellIndices=opSellIndices,opBuyIndices=opBuyIndices,tickIndex=tickIndex)
         
         
     def run_strategies(self,previous_buy_index=-1):

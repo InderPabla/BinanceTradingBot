@@ -96,12 +96,26 @@
 
         </ng-container>   
     </div>
+    <!-- [(ngModel)]="debugMode" -->
+    <ng-container *ngIf="highChartObj">
+        <div class="col-12" style="padding-top: 10px;padding-bottom: 10px;">
+            <button class="matFormSpace" (click)="hideHighChart()" mat-button style="background-color:white;color:black;"><span *ngIf="highChartVisible">Hide</span><span *ngIf="!highChartVisible">Expand</span></button>
+            <ng-container *ngIf="highChartObj.ref">
+                <ng-container *ngFor="let series of highChartObj.ref.series"> 
+                    <mat-checkbox 
+                        [checked]=highChartObj.ref.series[0].visible
+                        (click)="toggleSeries(series)"
+                        class="matFormSpace">
+                        <span *ngIf="getColor(series.name)" [ngStyle]="{'color':getColor(series.name)}">{{series.name}}</span>
+                        <span *ngIf="!getColor(series.name)">{{series.name}}</span>
+                    </mat-checkbox>           
+                </ng-container>    
+            </ng-container>
+            
+        </div>
+         <div class = "fadein" [chart]="highChartObj" [ngClass]="{'fadeout':!highChartVisible}"></div>    
+    </ng-container>
     
-    <div *ngIf="highChartObj" class="col-12" style="padding-top: 10px;padding-bottom: 10px;">
-       <button (click)="hideHighChart()" mat-button style="background-color:white;color:black;"><span *ngIf="highChartVisible">Hide</span><span *ngIf="!highChartVisible">Expand</span></button>
-    </div>
-
-    <div class = "fadein" *ngIf="highChartObj" [chart]="highChartObj" [ngClass]="{'fadeout':!highChartVisible}"></div>
     
     <app-evaled-data *ngIf="highChartObj && controlData && controlData.evaled && controlData.evaled.length>0" [evaled]=controlData.evaled [parent]=this></app-evaled-data>
     

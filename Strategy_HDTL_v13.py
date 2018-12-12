@@ -77,7 +77,7 @@ class Strategy (TraderStrategy):
         ops["zzbuyfast"],ops["zzperbuyfast"],ops["zzimperbuyfast"],obsLow,obsHigh = hkdtl.ZIGZAG(hkdtl.start_index,hkdtl.max_view,zzlow,zzhigh,close=False)
 
         
-        ops["opnhks"],ops["closehks"],ops["highhks"],ops["lowhks"] = dtl.SMOOTH_HEIKIN(10,strip=True)
+        ops["openhks"],ops["closehks"],ops["highhks"],ops["lowhks"] = dtl.SMOOTH_HEIKIN(10,strip=True)
         ops["30sma"] = hkdtl.SMA(hkdtl.close,30*multi,strip = True)
         ops["50sma"] = hkdtl.SMA(hkdtl.close,50*multi,strip = True)
         ops["100sma"] = hkdtl.SMA(hkdtl.close,100*multi,strip = True)
@@ -102,7 +102,7 @@ class Strategy (TraderStrategy):
         
         evaled = self.define_strategy(ops) #define a custom staratgy using ops
         
-        group = {'smaGroup':["30sma","50sma","100sma"]}
+        group = {'mainGroup':["30sma","50sma","100sma","closehk","highhk","lowhk","closehks","highhks","lowhks"], 'smaGroup':["30sma"]}
         
         return self.ops,self.buy_index,self.sell_index, evaled,group
         
@@ -129,11 +129,17 @@ class Strategy (TraderStrategy):
         
 
     def buy(self,ops,index):
+        if(ops["closehk"][index]==ops["highhk"][index] 
+        and ops["closehk"][index]>ops["closehk"][index-1]
+        and ops["closehk"][index-1]==ops["highhk"][index-1]):
+            return True
         return False
         
 
     
     def sell(self,ops,index,buy_index):
+        if(ops["closehk"][index]<ops["closehk"][index-1]):
+            return True
         return False
         
     def default(self,ops,dtl):
