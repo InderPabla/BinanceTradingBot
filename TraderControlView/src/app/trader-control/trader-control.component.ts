@@ -11,6 +11,11 @@ import { StockChart } from 'angular-highcharts';
 import * as Highcharts from 'highcharts';
 import { ThrowStmt } from '@angular/compiler';
 
+
+/**
+ * position: fixed;
+    top: 306px;
+ */
 declare var Timer: any;
 
 const SECOND_MS = 1000;
@@ -21,7 +26,8 @@ const QUARTER_HOUR_MS = (MIN_MS*30)/4.0;
 
 export enum KEY_CODE {
 	RIGHT_ARROW = 39,
-	LEFT_ARROW = 37
+	LEFT_ARROW = 37,
+	TAB = 9
   }
 
 @Component({
@@ -31,12 +37,19 @@ export enum KEY_CODE {
 })
 export class TraderControlComponent implements OnInit {
 
+	height:number = 500;
+	width:number = window.innerWidth*0.9;
+
+	mainPlotlines:any[];
 	mainHighChartSeries: any[];
 	highChartObj: StockChart;
+	mainPlotlineKeys:any[];
 
 	groupCharObj: StockChart[];
 	groupChartSeries: any[]; 
-
+	groupPlotlines:any[][];
+	groupName:string[];
+	
 	sma: any[] = [];
 	controlData: ControlData;
 
@@ -83,7 +96,7 @@ export class TraderControlComponent implements OnInit {
 	
 	getBinanceTickers(): Promise<any> {
 		return new Promise((resolve, reject) => {
-			let futureTime = QUARTER_HOUR_MS;
+			let futureTime = HOUR_MS;
 			let localStoageTickers: any = localStorage.getItem('tickers');
 			if (localStoageTickers) localStoageTickers = JSON.parse(localStoageTickers);
 
@@ -115,6 +128,7 @@ export class TraderControlComponent implements OnInit {
 	//https://github.com/highcharts/highcharts/issues/2348
 
 	createHighCartObject(realData: any, sell_index: number[], buy_index: number[], low: number[]): void {
+		let _thisComponent: TraderControlComponent = this;
 		if(this.highChartObj && this.controlData.historialPulled==true) {
 			
 			this.controlData.setExtreme(this.highChartObj.ref.xAxis[0].getExtremes());
@@ -122,7 +136,7 @@ export class TraderControlComponent implements OnInit {
 		}
 
 		let openTimeData: number[] = realData["openTime"];
-		let plotLines = [];
+
 		for (let i = 0; i < sell_index.length; i++) {
 			let si = sell_index[i]
 			let dashType = "ShortDash";
@@ -131,7 +145,7 @@ export class TraderControlComponent implements OnInit {
 				dashType = "Solid"
 				width = 2;
 			}
-			plotLines.push({ color: 'red', dashStyle: dashType, value: openTimeData[si], width: width });
+			this.mainPlotlines.push({ color: 'red', dashStyle: dashType, value: openTimeData[si], width: width });
 		}
 
 		for (let i = 0; i < buy_index.length; i++) {
@@ -143,16 +157,16 @@ export class TraderControlComponent implements OnInit {
 				width = 2;
 			}
 			if (buy_index.length > sell_index.length && i === buy_index.length - 1)
-				plotLines.push({ color: 'white', dashStyle: "Solid", value: openTimeData[bi], width: 2 });
+			this.mainPlotlines.push({ color: 'white', dashStyle: "Solid", value: openTimeData[bi], width: 2 });
 			else
-				plotLines.push({ color: 'lime', dashStyle: dashType, value: openTimeData[bi], width: width });
+			this.mainPlotlines.push({ color: 'lime', dashStyle: dashType, value: openTimeData[bi], width: width });
 		}
 
 		//console.log(this.highChartStockData[this.highChartStockData.length - 250][0]);
-
+		
 		this.highChartObj = new StockChart({
 			xAxis: {
-				plotLines: plotLines,
+				plotLines: this.mainPlotlines,
 			},
 			rangeSelector: {
 				enabled: false,
@@ -163,11 +177,12 @@ export class TraderControlComponent implements OnInit {
 
 			},
 			chart: {
-
+				
 				renderTo: "realtime-chart",
 				backgroundColor: 'black',
 				borderWidth: 0,
-				height: 600,
+				height: this.height,
+				width:this.width,
 				style: {
 					color: "white"
 				},
@@ -180,35 +195,19 @@ export class TraderControlComponent implements OnInit {
 					}
 				},
 				events: {
-
+					redraw:function() {
+						_thisComponent.setAllGroupChartViews()
+					},
 					load: function () {
-						/*var max = this.xAxis[0].max,
-							range = 72 * 3600 * 1000; // one day
-						this.xAxis[0].setExtremes(max - range, max);
-						_this.elementRef.nativeElement.getElementsByClassName('highcharts-plot-background')[0]
-							.addEventListener("dragstart", function (event) {
-								//.log("DRAG STARTED", event);
-							});
-
-						document.addEventListener("dragstart", function (event) {
-							//console.log("drag from document? ", event);
-						}, false);*/
-
-						// this.xAxis[0].setExtremes(_this.controlData.extreme.userMin, _this.controlData.extreme.userMax);
-
-						//console.log(this.xAxis[0].getExtremes())
-						//.log(_this.controlData.extreme)
-
-						if(_this.controlData.extreme)
+						if(_thisComponent.controlData.extreme)
 						this.xAxis[0]
 						.setExtremes(
-							_this.controlData.extreme.userMin, 
-							_this.controlData.extreme.userMax==_this.controlData.extreme.dataMax?this.xAxis[0].getExtremes().dataMax:((this.xAxis[0].getExtremes().dataMax-_this.controlData.extreme.dataMax)+_this.controlData.extreme.userMax));
+							_thisComponent.controlData.extreme.userMin, 
+							_thisComponent.controlData.extreme.userMax==_thisComponent.controlData.extreme.dataMax?this.xAxis[0].getExtremes().dataMax:((this.xAxis[0].getExtremes().dataMax-_thisComponent.controlData.extreme.dataMax)+_thisComponent.controlData.extreme.userMax));
 					},
 
 					click: function () {
-						//console.log("click");
-						//console.log(_this.highChartObj.ref.xAxis[0].getExtremes());
+
 					},
 
 					drilldown: function () {
@@ -226,55 +225,39 @@ export class TraderControlComponent implements OnInit {
 
 				}
 			},
-
 			series:this.mainHighChartSeries
-			// series: [
-			// 	{
-			// 		name: String(this.controlData.chosenTickerAny),
-			// 		type: 'candlestick',
-			// 		data: this.controlData.highChartStockData,
-			// 	},
-			// 	{
-			// 		type: 'line',
-			// 		name: 'SMA',
-			// 		color: 'yellow',
-			// 		data: this.sma,
-			// 	}
-			// ]
 		});
 		
-		let _this: TraderControlComponent = this;
+		
 
 		if(this.highChartObj && this.controlData.historialPulled==true && this.controlData.extreme) {
-			
-			//console.log("SETTING EXTREME USER",this.controlData.extreme);
 
 			setTimeout(function () {
-				let max = _this.highChartObj.ref.xAxis[0].dataMax; //dataMax
-				//console.log("MIN MAX SET:",max,_this.controlData.extreme.userMin);
-				//_this.highChartObj.ref.xAxis[0].setExtremes(_this.controlData.extreme.userMin,max)
-					//_this.controlData.extreme.userMin, max)
+				
+				let max = _thisComponent.highChartObj.ref.xAxis[0].dataMax; //dataMax
 			}, 100)
 		}
 		else {
 			//console.log("SETTING EXTREME ZOOM IN");
 			setTimeout(function () {
-				let other: any = _this.highChartObj;
-				let max = _this.highChartObj.ref.xAxis[0].dataMax
+				
+				let other: any = _thisComponent.highChartObj;
+				let max = _thisComponent.highChartObj.ref.xAxis[0].dataMax
 				let range = 48 * 3600 * 1000;
-				_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
+				_thisComponent.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
 
 				setTimeout(function () {
-					let other: any = _this.highChartObj;
-					let max = _this.highChartObj.ref.xAxis[0].dataMax
+					let other: any = _thisComponent.highChartObj;
+					let max = _thisComponent.highChartObj.ref.xAxis[0].dataMax
 					let range = 24 * 3600 * 1000;
-					_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
+					_thisComponent.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
 
 					setTimeout(function () {
-						let other: any = _this.highChartObj;
-						let max = _this.highChartObj.ref.xAxis[0].dataMax
+						console.log(_thisComponent.highChartObj)
+						let other: any = _thisComponent.highChartObj;
+						let max = _thisComponent.highChartObj.ref.xAxis[0].dataMax
 						let range = 12 * 3600 * 1000;
-						_this.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
+						_thisComponent.highChartObj.ref.xAxis[0].setExtremes(max - range, max)
 
 					}, 500);
 
@@ -283,11 +266,44 @@ export class TraderControlComponent implements OnInit {
 
 			}, 1500);
 		}
-
+		console.log(this.groupName)
+		//console.log(this.groupChartSeries)
+		this.groupCharObj = this.groupChartSeries.map((series,index) => { 
+			return new StockChart({
+				
+				title:{text:this.groupName[index]},
+				xAxis: {
+					plotLines: this.groupPlotlines[index],
+				},
+				rangeSelector: {enabled: false,selected: 1,},
+				tooltip: {valueDecimals: 9,},
+				chart: {
+					
+					renderTo: "realtime-chart",backgroundColor: 'black',borderWidth: 0,height: this.height, width:this.width,
+					style: {color: "white"},zoomType: "none",panning: false,reflow: true,
+					resetZoomButton: {theme: {display: 'none'}},
+					events: {
+						
+						load: function () {
+							if(_thisComponent.controlData.extreme)
+							this.xAxis[0]
+							.setExtremes(
+								_thisComponent.controlData.extreme.userMin, 
+								_thisComponent.controlData.extreme.userMax==_thisComponent.controlData.extreme.dataMax?this.xAxis[0].getExtremes().dataMax:((this.xAxis[0].getExtremes().dataMax-_thisComponent.controlData.extreme.dataMax)+_thisComponent.controlData.extreme.userMax));
+						},
+					}
+				},
+				series:series
+			})
+		});
+		
+		
 	}
 
 	buildStockDataWithArray(realData) {;
 		this.mainHighChartSeries =[];
+	
+
 		let highChartStockData:any[] = [];
 		let closeData: number[] = realData["close"];
 		let openData: number[] = realData["open"];
@@ -335,6 +351,8 @@ export class TraderControlComponent implements OnInit {
 
 				this.highChartObj;
 				this.sma = [];
+				this.mainPlotlines = []
+				this.mainPlotlineKeys = [];
 				//console.log(result["evaled"]);
 				this.controlData.setEvaled(result["evaled"]);
 				
@@ -442,26 +460,71 @@ export class TraderControlComponent implements OnInit {
 
 
 	buildStockGroupData(group,realData) {
+		this.groupCharObj = [];
+		this.groupChartSeries = [];
+		this.groupPlotlines = [];
+		this.groupName = [];
 		let openTimeData: number[] = realData["openTime"];
 
 		let groups = Object.keys(group);
+
 		for(let gp of groups) {
+
 			if(gp == "mainGroup") {
 				let keys = group[gp];
 
 				for(let key of keys) {
-					let someData = realData[key].map((value,index)=>{return [openTimeData[index],value]}); 
-					let color =  this.nextColor(key,true);
+					if(key.indexOf("_line")>0) {
+						this.mainPlotlineKeys.push({visible:true,key:key});
+						let color = this.nextColor(key,true)
+						//console.log(realData[key])
+						for(let time of realData[key]) {
+							this.mainPlotlines.push({id:key,label: key, color: color, dashStyle: "Solid", value: time, width: 2 });	
+						}
+					}
+					else {
+						let someData = realData[key].map((value,index)=>{return [openTimeData[index],value]}); 
+						let color =  this.nextColor(key,true);
 
-					this.mainHighChartSeries.push({
-						name: key,
-						type: 'line',
-						data: someData,
-						// color: '#FF0000'
-						color: color
-					});
+						this.mainHighChartSeries.push({
+							name: key,
+							type: 'line',
+							data: someData,
+							color: color
+						});
+					}
+					
 				}
 			}
+			else {
+				let keys = group[gp];
+				this.groupChartSeries.push([])
+				this.groupPlotlines.push([])
+				this.groupName.push(gp);
+				for(let key of keys) {
+					if(key.indexOf("_line")>0) {
+						let color = this.nextColor(key,true)
+						//console.log(realData[key])
+						for(let time of realData[key]) {
+							this.groupPlotlines[this.groupPlotlines.length-1].push({ id:key,label: key,color: color, dashStyle: "Solid", value: time, width: 2 });	
+						}
+					}
+					else {
+						let someData = realData[key].map((value,index)=>{return [openTimeData[index],value]}); 
+						let color =  this.nextColor(key,true);
+
+						this.groupChartSeries[this.groupChartSeries.length-1].push({
+							name: key,
+							type: 'line',
+							data: someData,
+							color: color
+						});
+					}
+					
+				}
+			}
+		
+			
 		}
 	}
 
@@ -478,6 +541,40 @@ export class TraderControlComponent implements OnInit {
 		this.highChartObj.ref.xAxis[0].setExtremes(this.controlData.openTime[buyIndex], this.controlData.openTime[sellIndex]);
 	}
 
+	togglePlot(plot) {
+		let thisObject:TraderControlComponent = this;
+
+		let key = plot.key;
+		let visible = plot.visible;
+		plot.visible = !plot.visible;
+
+		let obj:any = this.highChartObj.ref.xAxis[0];
+		console.log(plot)
+		console.log(obj.plotLinesAndBands.length,obj.plotLinesAndBands[0])
+
+		if(!plot.visible) {
+			
+			obj.plotLinesAndBands.forEach(function(el) {
+				if(el.svgElem != undefined && el.id === plot.key) {
+					el.svgElem[ 'hide' ]();
+					el.visible = false;
+					el.svgElem['visibility'] = "hidden";
+				}
+			 });
+		}
+		else {
+			obj.plotLinesAndBands.forEach(function(el) {
+				if(el.svgElem != undefined && el.id === plot.key) {
+					el.svgElem[ 'show' ]();
+					el.svgElem['visibility'] = "visible";
+					el.visible = true;
+				  }
+			 });
+		}
+
+		//setTimeout(()=>{thisObject.moveMainViewLeft();},100)
+	}
+
 	toggleSeries(series:Highcharts.SeriesObject) {
 		if(series.visible)series.hide();
 		else series.show()
@@ -487,16 +584,46 @@ export class TraderControlComponent implements OnInit {
 		this.highChartVisible = !this.highChartVisible;
 	}
 
+	groupChartMoveLeft(index:number) {
+		let fromIndex = index;
+		let toIndex;
+		if(index===0) {
+			toIndex = this.groupCharObj.length-1;
+		}
+		else {
+			toIndex = fromIndex-1;
+		}
+
+		let temp = this.groupCharObj[fromIndex];
+		this.groupCharObj[fromIndex] = this.groupCharObj[toIndex];
+		this.groupCharObj[toIndex] = temp;
+	}
+
+	groupChartMoveRight(index:number) {
+		let fromIndex = index;
+		let toIndex;
+		if(this.groupCharObj.length-1===index) {
+			toIndex = 0;
+		}
+		else {
+			toIndex = fromIndex+1;
+		}
+
+		let temp = this.groupCharObj[fromIndex];
+		this.groupCharObj[fromIndex] = this.groupCharObj[toIndex];
+		this.groupCharObj[toIndex] = temp;
+	}
+
 	generateUniqueColor() {
 		let maxHue = 0.8;
-		let step = 0.05;
+		let step = 0.1;
 		let uniqueRGB:String[] = [this.rgbToHex(255,255,255)];
 
 		for(let hue = 0;hue<=maxHue;hue+=step) {
 			let rgb = this.hslToRgb(hue,1.0,0.5);
 			uniqueRGB.push(this.rgbToHex(rgb[0],rgb[1],rgb[2]));
 		}
-		
+		console.log(uniqueRGB.length)
 		for(let i = 0; i<uniqueRGB.length/2 ; i+=2) {
 			let i1 = i;
 			let i2 = (uniqueRGB.length-1) - i;
@@ -591,8 +718,9 @@ export class TraderControlComponent implements OnInit {
 	}
 
 	nextColor(key,comp) {
-		if(comp==true && this.getColor(this.colorsHash[key]))
-			return this.getColor(this.colorsHash[key]);
+		//console.log(key,comp,this.getColor(key))
+		if(comp==true && this.getColor(key))
+			return this.getColor(key);
 
 		
 		let color:String = this.colors[this.colorIndex];
@@ -635,8 +763,25 @@ export class TraderControlComponent implements OnInit {
 		}	
 	}
 	
+	setAllGroupChartViews() {
+
+		if(this.highChartObj) {
+			let extreme = this.highChartObj.ref.xAxis[0].getExtremes();
+			for(let chart of this.groupCharObj)
+				chart.ref.xAxis[0].setExtremes(extreme.min,extreme.max)
+		}
+
+	}
+
 	moveEvent:any;
 	
+	@HostListener('window:resize', ['$event'])
+	resizeEvent(event: KeyboardEvent) {
+		let width = window.innerWidth*0.9;
+		if(this.highChartObj) this.highChartObj.ref.setSize(width,this.height)
+		if(this.groupCharObj) this.groupCharObj.map((obj)=>{obj.ref.setSize(width,this.height)})
+	}
+
 	@HostListener('window:keydown', ['$event'])
 	keyDownEvent(event: KeyboardEvent) {
 		if(!this.moveEvent) {
@@ -650,6 +795,11 @@ export class TraderControlComponent implements OnInit {
 			if (event.keyCode === KEY_CODE.LEFT_ARROW) {
 				isCorrectKey = true
 				this.moveMainViewLeft();
+			}	
+
+			if (event.keyCode === KEY_CODE.TAB) {
+				
+				this.setAllGroupChartViews()
 			}	
 
 			if(isCorrectKey = true)

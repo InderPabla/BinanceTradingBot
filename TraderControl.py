@@ -359,9 +359,10 @@ class TraderControl:
     def get_asset_price(self):
         query = "https://min-api.cryptocompare.com/data/price?fsym="+self.get_symbol_asset()+"&tsyms="+self.get_symbol_currency()
         print(query)
-        response =req.get(query)
         
+        response =req.get(query)
         return json.loads(response.text)[self.get_symbol_currency()]
+        #return 1.0
             
     def get_symbol_asset(self):
         return self.config_data[self.KEY_ASSET]

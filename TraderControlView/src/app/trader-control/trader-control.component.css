@@ -110,3 +110,23 @@ margin-left:10px;
     font-weight: bold;
     color:white;
 }
+
+.chartGroupName {
+    color:white;
+}
+
+.chartGroupName.fa-chevron-left {
+    cursor: pointer;
+    padding-left:5px;
+}
+.chartGroupName.fa-chevron-right {
+    cursor: pointer;
+    padding-right:5px;
+}
+
+.chartGroupName.fa-chevron-left:hover {
+    color: darkorange;
+}
+.chartGroupName.fa-chevron-right:hover {
+    color: darkorange;
+}

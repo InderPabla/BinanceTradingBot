@@ -28,7 +28,7 @@ class TraderDetail:
             self.kline = self.merge(self.kline,second_kline)
         
         
-        total_size = 3000
+        total_size = 10000
         if(tickIndex>-1):
             total_size = total_size + tickIndex
             
@@ -1166,6 +1166,55 @@ class TraderDetail:
             return np.array(maxd)
         else:
             return  np.array(maxd)[self.start_index:self.max_view]             
+    
+    def FULL(self,value):
+        size = self.max_view-self.start_index
+        return np.full(size,value)
+        
+   
+    def VCLOSE(self,strip=False):
+        vclose = []
+        
+        
+        for i in range(0,len(self.close)):
+            
+            h = self.high[i]
+            l = self.low[i]
+            o = self.open[i]
+            c = self.close[i]
+            v = c
+            
+            if(i>0):
+                hp = self.high[i-1]
+                lp = self.low[i-1]
+                op = self.open[i-1]
+                cp = self.close[i-1]
+            
+                
+                if(c>hp or c<lp):
+                    v = c
+                elif(c<hp and c>lp ):
+                    v = cp
+                elif(h>hp and c<cp):
+                    v = cp
+                elif(l<lp and c>cp):
+                    v = cp
+                
+                '''
+                if(hp>h):
+                    v = cp
+                elif(lp<l):
+                    v = cp
+                else:
+                    v = c        
+                '''    
+            vclose.append(v)
+            pass
+        
+        if(strip==False):
+            return np.array(vclose)
+        else:
+            return np.array(vclose)[self.start_index:self.max_view]
         
     def CLOSE(self,strip=False):
         if(strip==False):
@@ -1220,6 +1269,16 @@ class TraderDetail:
             return self.time
         else:
             return self.time[self.start_index:self.max_view]
+
+    def STRIP(self,data):
+        return data[self.start_index:self.max_view]    
+    
+    def RESOLVE(self,data,func,strip=False):
+        result = func(data)
+        if(strip==False):
+            return result
+        else:
+            return result[self.start_index:self.max_view]
         
     #NORMALIZE DATA 
     def norm_to_data(self,normal,toFix):

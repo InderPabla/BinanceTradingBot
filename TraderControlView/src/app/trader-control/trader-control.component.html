@@ -98,22 +98,67 @@
     </div>
     <!-- [(ngModel)]="debugMode" -->
     <ng-container *ngIf="highChartObj">
+        <ng-container *ngIf="groupCharObj && groupCharObj.length>0">
+                <ng-container *ngFor="let chart of groupCharObj;let j = index;">
+                    <ng-container *ngIf="chart.ref">
+                            <span (click)="groupChartMoveLeft(j)" class="chartGroupName fa fa-chevron-left"></span>
+                            <span class="chartGroupName">{{chart.ref.title.textStr}}</span>
+                            <span (click)="groupChartMoveRight(j)" class="chartGroupName fa fa-chevron-right"></span>
+                    </ng-container>
+                </ng-container>    
+        </ng-container>
+
         <div class="col-12" style="padding-top: 10px;padding-bottom: 10px;">
             <button class="matFormSpace" (click)="hideHighChart()" mat-button style="background-color:white;color:black;"><span *ngIf="highChartVisible">Hide</span><span *ngIf="!highChartVisible">Expand</span></button>
             <ng-container *ngIf="highChartObj.ref">
-                <ng-container *ngFor="let series of highChartObj.ref.series"> 
+                <ng-container *ngFor="let series of highChartObj.ref.series; let i = index;"> 
                     <mat-checkbox 
-                        [checked]=highChartObj.ref.series[0].visible
+                        [checked]=highChartObj.ref.series[i].visible
                         (click)="toggleSeries(series)"
                         class="matFormSpace">
                         <span *ngIf="getColor(series.name)" [ngStyle]="{'color':getColor(series.name)}">{{series.name}}</span>
                         <span *ngIf="!getColor(series.name)">{{series.name}}</span>
-                    </mat-checkbox>           
-                </ng-container>    
+                    </mat-checkbox>    
+                           
+                </ng-container> 
+                <!-- <ng-container *ngFor="let plot of mainPlotlineKeys; let i = index;"> 
+                    <mat-checkbox 
+                        [checked]=plot.visible
+                        (click)="togglePlot(plot)"
+                        class="matFormSpace">
+                        <span *ngIf="getColor(plot.key)" [ngStyle]="{'color':getColor(plot.key)}">{{plot.key}}</span>
+                        <span *ngIf="!getColor(plot.key)">{{plot.key}}</span>
+                    </mat-checkbox>    
+                           
+                </ng-container>     -->
+                
             </ng-container>
             
         </div>
-         <div class = "fadein" [chart]="highChartObj" [ngClass]="{'fadeout':!highChartVisible}"></div>    
+        <div class = "fadein" [chart]="highChartObj" [ngClass]="{'fadeout':!highChartVisible}"></div>   
+         
+         
+
+        <ng-container *ngIf="groupCharObj && groupCharObj.length>0">
+            <ng-container *ngFor="let chart of groupCharObj">
+                <div class="col-12">
+                    <ng-container *ngIf="chart.ref">
+                        <ng-container *ngFor="let series of chart.ref.series; let i = index;"> 
+                            <mat-checkbox 
+                                [checked]=chart.ref.series[i].visible
+                                (click)="toggleSeries(series)"
+                                class="matFormSpace">
+                                <span *ngIf="getColor(series.name)" [ngStyle]="{'color':getColor(series.name)}">{{series.name}}</span>
+                                <span *ngIf="!getColor(series.name)">{{series.name}}</span>
+                            </mat-checkbox>           
+                        </ng-container>    
+                    </ng-container>        
+                </div>   
+                <div class = "fadein" [chart]="chart" [ngClass]="{'fadeout':!highChartVisible}"></div>
+            </ng-container>
+                
+               
+        </ng-container>
     </ng-container>
     
     
